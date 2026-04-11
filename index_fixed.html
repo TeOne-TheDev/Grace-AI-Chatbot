@@ -1,0 +1,2502 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Grace AI v5.1</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+<meta name="apk:app_name"     content="Grace AI">
+<meta name="apk:package_id"   content="com.graceai.app">
+<meta name="apk:version"      content="5.1.0">
+<meta name="apk:version_code" content="51">
+<meta name="apk:api_url"      content="https://api.groq.com">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000">
+<link rel="apple-touch-icon" href="5539745.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+:root {
+    --bg-main: #f0f2f5;
+    --bg-panel: #ffffff;
+    --text-main: #050505;
+    --text-sub: #65676b;
+    --border: #e4e6eb;
+    --bubble-bot: #f0f2f5;
+    --bubble-bot-txt: #050505;
+    --bubble-usr: #0084ff;
+    --bubble-usr-txt: #ffffff;
+    --header-bg: #ffffff;
+    --input-bg: #f0f2f5;
+    --av-bg: #e4e6eb;
+    --btn-ai-bg: #f3e8ff;
+    --btn-ai-txt: #9333ea;
+    --btn-ai-border: #d8b4fe;
+    --action-text: #5b7194;
+}
+[data-theme="dark"] {
+    --bg-main: #000000;
+    --bg-panel: #050505;
+    --text-main: #ffffff;
+    --text-sub: #888888;
+    --border: #151515;
+    --bubble-bot: #151515;
+    --bubble-bot-txt: #eeeeee;
+    --bubble-usr: #0084ff;
+    --bubble-usr-txt: #ffffff;
+    --header-bg: #000000;
+    --input-bg: #0c0c0c;
+    --av-bg: #111111;
+    --btn-ai-bg: #1a0b2e;
+    --btn-ai-txt: #b259ff;
+    --btn-ai-border: #3b156b;
+    --action-text: #8bb4e7;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+::-webkit-scrollbar{width:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg-main);color:var(--text-main);height:100dvh;width:100vw;overflow:hidden;transition:background 0.3s, color 0.3s;box-sizing:border-box}
+.screen{position:fixed;inset:0;top:0;display:flex;flex-direction:column;background:var(--bg-main);transition:transform .3s ease;z-index:10;transform:translateX(100%);pointer-events:none}
+.screen.active{transform:translateX(0);pointer-events:auto}
+#sc-home{transform:translateX(0);pointer-events:auto}
+#sc-home.off{transform:translateX(-100%);pointer-events:none}
+.home-hdr, .sub-hdr{padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);background:var(--header-bg);z-index:20;flex-shrink:0}
+.chat-hdr{padding:6px 12px 4px;display:flex;justify-content:space-between;align-items:center;border-bottom:none;background:transparent;z-index:20;position:absolute;top:0;left:0;right:0}
+.chat-hdr b, .chat-hdr #c-name{color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.8),0 0 8px rgba(0,0,0,0.6)}
+.chat-hdr .c-back, .chat-hdr .hdr-icon-btn, .chat-hdr .btn-update-portrait, .chat-hdr .btn-clear-chat{color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.8);filter:drop-shadow(0 1px 3px rgba(0,0,0,0.7))}
+.grp-chat-hdr b, .grp-chat-hdr #grp-c-name{color:#fff!important;text-shadow:0 1px 4px rgba(0,0,0,0.8),0 0 8px rgba(0,0,0,0.6)}
+.grp-chat-hdr .c-back, .grp-chat-hdr .hdr-icon-btn{color:#fff!important;text-shadow:0 1px 4px rgba(0,0,0,0.8);filter:drop-shadow(0 1px 3px rgba(0,0,0,0.7))}
+#virtual-date-badge{color:#fff!important;text-shadow:0 1px 3px rgba(0,0,0,0.9)!important;background:rgba(0,0,0,0.35)!important;border-radius:8px;padding:1px 6px}
+#virtual-clock-badge{text-shadow:0 1px 3px rgba(0,0,0,0.9)!important}
+.hdr-btn, .c-back, .hdr-icon-btn{background:none;border:none;color:#0084ff;font-size:20px;cursor:pointer;padding:5px;position:relative}
+#bot-list, #chat-container, .form-container{flex:1;overflow-y:auto;padding:16px;min-height:0}
+#chat-container{padding-top:58px}
+#grp-chat-container{padding-top:68px}
+.grp-chat-hdr{padding:10px 12px 8px;display:flex;justify-content:space-between;align-items:center;border-bottom:none;background:transparent;z-index:20;flex-shrink:0;position:absolute;top:0;left:0;right:0}
+
+/* === SETTINGS DROPDOWN === */
+/* ── CHAT SETTINGS BOTTOM SHEET ── */
+.settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:299;display:none;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.settings-overlay.open{display:block}
+#chat-settings-menu,#grp-settings-menu{
+    position:fixed;bottom:0;left:0;right:0;
+    background:#111;border:1px solid #222;
+    border-radius:22px 22px 0 0;
+    padding:0 0 80px;
+    z-index:300;
+    box-shadow:0 -8px 40px rgba(0,0,0,0.85);
+    display:none;
+    transform:translateY(100%);
+    transition:transform .28s cubic-bezier(.32,1,.28,1);
+    max-height:52vh;overflow-y:auto;
+}
+#chat-settings-menu.open,#grp-settings-menu.open{display:block;transform:translateY(0)}
+.settings-drag-handle{width:40px;height:4px;background:#444;border-radius:4px;margin:12px auto 6px;flex-shrink:0}
+.settings-sheet-title{font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:1px;text-align:center;padding:2px 0 12px;border-bottom:1px solid #1e1e1e;margin:0 16px 4px}
+.settings-item{display:flex;align-items:center;gap:13px;padding:16px 20px;color:#eee;font-size:16px;cursor:pointer;transition:background .12s;border-bottom:1px solid #181818}
+.settings-item:last-child{border-bottom:none}
+.settings-item:active,.settings-item:hover{background:#1a1a1a}
+.settings-item i{width:22px;text-align:center;color:#0084ff;font-size:17px;flex-shrink:0}
+.settings-item.danger i{color:#ff5555}
+.settings-item.danger{color:#ff8888}
+.reply-length-row{display:flex;align-items:flex-start;gap:13px;padding:14px 20px;border-bottom:1px solid #181818}
+.reply-length-row i{width:22px;text-align:center;color:#0084ff;font-size:17px;flex-shrink:0;margin-top:2px}
+.reply-length-label{font-size:16px;color:#eee;margin-right:auto;flex-shrink:0}
+.reply-len-slider-wrap{display:flex;flex-direction:column;align-items:stretch;gap:6px;min-width:160px;flex-shrink:0}
+.reply-len-slider{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:linear-gradient(to right,#0084ff 0%,#0084ff 50%,#333 50%,#333 100%);outline:none;cursor:pointer;transition:background .2s}
+.reply-len-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:#0084ff;border:2px solid #60a5fa;box-shadow:0 0 6px rgba(0,132,255,0.5);cursor:pointer;transition:transform .15s}
+.reply-len-slider::-webkit-slider-thumb:active{transform:scale(1.2)}
+.reply-len-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#0084ff;border:2px solid #60a5fa;cursor:pointer}
+.reply-len-labels{display:flex;justify-content:space-between;align-items:flex-end}
+.reply-len-opt{display:flex;flex-direction:column;align-items:center;gap:2px}
+.reply-len-opt-name{font-size:12px;font-weight:600;color:#888;transition:color .2s}
+.reply-len-opt-hint{font-size:10px;color:#555;transition:color .2s}
+.reply-len-opt.active .reply-len-opt-name{color:#60a5fa}
+.reply-len-opt.active .reply-len-opt-hint{color:#4a8abf}
+.emo-dot{position:absolute;top:5px;right:5px;width:8px;height:8px;background:#ff4444;border-radius:50%;display:none;border:1px solid #000}
+
+/* ===== END @MENTION PICKER (removed) ===== */
+.room-section-hdr{font-size:10px;font-weight:bold;color:var(--text-sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;margin-top:4px}
+.room-group-wrap{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.room-card{background:var(--bg-main);border-radius:12px;padding:7px 9px;border:1px solid var(--border);min-width:0}
+.room-card-outside{border-color:#f59e0b44!important}
+.room-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.room-card-name{font-size:14px;font-weight:bold;color:var(--text-main);display:flex;align-items:center;gap:5px;padding:4px 0}
+.room-card-you{font-size:10px;color:#0084ff;font-weight:bold;background:#0084ff22;padding:1px 7px;border-radius:10px;cursor:pointer}
+.room-card-members{display:flex;gap:6px;flex-wrap:wrap;align-items:center;min-height:20px}
+.room-member-chip{display:flex;align-items:flex-start;gap:5px;background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;padding:3px 8px 3px 3px;cursor:pointer;transition:opacity .15s}
+.room-member-chip:active{opacity:.6}
+.room-member-chip img{width:22px;height:22px;border-radius:50%;object-fit:cover;flex-shrink:0;margin-top:1px}
+.room-member-chip span{font-size:11px;color:var(--text-main);font-weight:500}
+.room-chip-info{display:flex;flex-direction:column;gap:1px;min-width:0}
+.room-chip-name{font-size:11px;color:var(--text-main);font-weight:500;white-space:nowrap}
+.room-activity-badge{font-size:9px;color:var(--text-sub);font-style:italic;opacity:0.85;white-space:normal;line-height:1.3;display:block}
+.room-empty-label{font-size:11px;color:var(--text-sub);font-style:italic}
+.you-chip{display:flex;align-items:center;gap:4px;background:#0084ff22;border:1px solid #0084ff55;border-radius:20px;padding:2px 8px 2px 3px}
+.you-chip span{font-size:11px;color:#0084ff;font-weight:bold}
+.room-move-toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#222;color:#fff;font-size:13px;padding:8px 18px;border-radius:20px;z-index:9999;pointer-events:none;opacity:0;transition:opacity .3s}
+.room-move-toast.show{opacity:1}
+/* === ROOM CHANGE SEPARATOR === */
+.room-change-sep{display:flex;align-items:center;gap:8px;padding:8px 4px;margin:4px 0;-webkit-user-select:none;user-select:none}
+.room-change-sep::before,.room-change-sep::after{content:'';flex:1;height:1px;background:var(--border)}
+.room-change-sep-label{font-size:10px;font-weight:700;color:var(--text-sub);white-space:nowrap;letter-spacing:0.3px;opacity:0.85}
+/* === BEDROOM QUICK BUTTON === */
+.bedroom-quick-btn{background:rgba(124,58,237,0.18);border:1px solid rgba(124,58,237,0.35);color:#c084fc;border-radius:10px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:4px;transition:all .15s;text-shadow:0 1px 3px rgba(0,0,0,0.7);flex-shrink:0}
+.bedroom-quick-btn:active{opacity:.6;transform:scale(0.95)}
+.bedroom-quick-btn.active-room{background:rgba(124,58,237,0.35);border-color:rgba(168,85,247,0.6);color:#e9d5ff}
+.world-setting-row{display:flex;gap:8px;align-items:stretch;margin-top:8px}
+.world-setting-row .form-control{flex:1}
+.world-type-btn{background:var(--input-bg);border:1px solid var(--border);color:var(--text-sub);border-radius:10px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap;transition:all .15s}
+.world-type-btn.active{background:#0a1a30;border-color:#0084ff88;color:#60a5fa;font-weight:bold}
+.img-model-btn{background:var(--input-bg);border:1px solid var(--border);color:var(--text-sub);border-radius:12px;padding:10px 8px;font-size:11px;cursor:pointer;text-align:center;transition:all .2s;line-height:1.5}
+.img-model-btn b{font-size:13px;color:var(--text-main);display:block;margin:2px 0}
+.img-model-btn.active{background:#0a1a30;border-color:#0084ff;color:#60b3ff;box-shadow:0 0 0 2px #0084ff44}
+.img-model-btn.active b{color:#60b3ff}
+.img-svc-btn{background:var(--input-bg);border:1px solid var(--border);color:var(--text-sub);border-radius:10px;padding:12px;font-size:14px;cursor:pointer;text-align:center;transition:all .2s;font-weight:500}
+.img-svc-btn.active{background:#0a1a30;border-color:#0084ff;color:#60b3ff;box-shadow:0 0 0 2px #0084ff44;font-weight:bold}
+.chat-img-model-btn{background:#1a1a1a;border:1px solid #2a2a2a;color:#888;border-radius:8px;padding:6px 4px;font-size:11px;cursor:pointer;text-align:center;transition:all .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-img-model-btn:active{opacity:.7}
+.chat-img-model-btn.active{background:#0a1a30;border-color:#0084ff;color:#60b3ff;font-weight:bold}
+#grp-world-custom-row{display:none;margin-top:8px;gap:8px;align-items:center}
+.world-gen-btn{background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:bold;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.world-gen-btn:disabled{opacity:0.5}
+.world-preview{width:100%;max-height:100px;object-fit:cover;border-radius:10px;border:1px solid var(--border);margin-top:6px;display:none}
+/* ===== END WORLD SETTING CSS ===== */
+.bot-row{display:flex;align-items:center;padding:14px;border-bottom:1px solid var(--border);cursor:pointer;background:var(--bg-panel);border-radius:12px;margin-bottom:10px}
+.bot-row:active{opacity:0.7}
+.b-av, .msg-av{width:50px;height:50px;border-radius:50%;background:var(--av-bg);object-fit:cover;border:1px solid var(--border);flex-shrink:0}
+.p-av-preview{width:75px;height:75px;border-radius:50%;background:var(--av-bg);object-fit:cover;border:1px solid var(--border);flex-shrink:0}
+.msg-av{width:35px;height:35px;margin-bottom:25px}
+.b-info{flex:1;margin-left:14px}
+.b-name{font-size:16px;font-weight:bold;margin-bottom:4px}
+.b-desc{font-size:13px;color:var(--text-sub);display:-webkit-box;-webkit-line-clamp:1;line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.msg-row{display:flex;margin-bottom:18px;gap:10px;align-items:flex-end}
+.msg-row.usr{flex-direction:row-reverse}
+.msg-content-wrapper{display:flex;flex-direction:column;max-width:75%;gap:5px}
+.msg-row.usr .msg-content-wrapper{align-items:flex-end}
+.bubble{padding:12px 16px;border-radius:18px;font-size:16px;line-height:1.6;word-wrap:break-word}
+.bubble.bot{background:var(--bubble-bot);color:var(--bubble-bot-txt);border-bottom-left-radius:4px}
+.bubble.usr{background:var(--bubble-usr);color:var(--bubble-usr-txt);border-bottom-right-radius:4px}
+.bubble.narrator{background:transparent;color:var(--text-sub);border:none;font-style:italic;font-size:13px;text-align:center;padding:6px 16px;line-height:1.6;box-shadow:none;max-width:100%;width:100%}
+.bubble.npc{background:#1a1a2e;color:#c4b5fd;border:1px solid #4c1d9588;border-bottom-left-radius:4px;font-size:15px;}
+.msg-av.npc-av{background:#2d1b69;border:1px solid #7c3aed;color:#c4b5fd;font-size:18px;display:flex;align-items:center;justify-content:center;font-weight:bold;border-radius:50%;width:35px;height:35px;flex-shrink:0;margin-bottom:25px;}
+.msg-row.narrator-row{justify-content:center;padding:2px 0}
+.action-text{font-style:normal;color:rgba(255,255,255,0.75)}
+.speech-text{color:#ffffff;font-style:normal;font-weight:500}
+.bubble.usr .action-text{color:#ffffff;font-style:normal;font-weight:normal}
+.bubble b{color:#ffffff!important;font-weight:bold;font-style:normal}
+.bubble i{color:rgba(255,255,255,0.52);font-style:italic}
+.illus-btn{background:#0084ff;color:#fff;border:none;padding:0;border-radius:50%;font-size:16px;cursor:pointer;margin-top:4px;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.thought-btn{background:none;border:1px solid #555;color:#b0b0b0;padding:6px 12px;border-radius:15px;font-size:12px;cursor:pointer;margin-top:4px;width:fit-content;font-weight:bold;transition:all .2s}
+.thought-btn:active{background:#222;border-color:#888}
+/* Inline thought bubble */
+.thought-inline{background:#1a0a2e;border:1px solid #3b1a5a;border-radius:12px;padding:10px 14px;margin-top:8px;font-size:13px;color:#c084fc;font-style:italic;line-height:1.55;position:relative;max-width:100%}
+.thought-inline::before{content:'\uD83D\uDCAD';position:absolute;top:-10px;left:12px;font-size:14px;background:#1a0a2e;padding:0 4px;border-radius:50%}
+.thought-inline-loading{color:#7c3aed;font-size:12px;opacity:0.7}
+.thought-inline-err{color:#ef4444;font-size:12px}
+/* Thought modal */
+.thought-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:400;display:none;justify-content:center;align-items:flex-end;padding-bottom:90px;padding-left:12px;padding-right:12px}
+.thought-panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:18px;padding:16px;width:100%;max-width:480px;margin:0 auto;box-shadow:0 -4px 30px rgba(0,0,0,0.5)}
+.thought-header{font-size:12px;color:#9b7fe8;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.thought-name{font-size:13px;font-weight:bold;color:#b78cf7;margin-bottom:6px}
+.thought-body{font-size:14px;color:var(--text-main);line-height:1.6;font-style:italic;opacity:0.9}
+.thought-loading{text-align:center;color:var(--text-sub);font-size:13px;padding:16px;font-style:italic}
+.illus-img img{width:250px;max-width:100%;border-radius:12px;border:1px solid var(--border);margin-top:5px}
+.illus-loading{color:var(--text-sub);font-size:12px;margin-top:4px;font-style:italic}
+.chat-foot{padding:10px;display:flex;gap:6px;align-items:flex-end;border-top:1px solid var(--border);background:var(--header-bg)}
+#msg-input{flex:1;background:var(--input-bg);border:1px solid var(--border);color:var(--text-main);padding:12px 15px;border-radius:20px;font-size:15px;resize:none;max-height:100px;outline:none;font-family:inherit;}
+#grp-msg-input{flex:1;background:var(--input-bg);border:1px solid var(--border);color:var(--text-main);padding:12px 15px;border-radius:20px;font-size:15px;resize:none;max-height:100px;outline:none;font-family:inherit;}
+.btn-action-star{background:none;border:none;color:var(--text-sub);font-size:18px;font-weight:bold;cursor:pointer;padding:10px 5px;display:flex;align-items:center;justify-content:center}
+.btn-thought-usr{background:none;border:none;color:#a855f7;font-size:15px;font-weight:bold;cursor:pointer;padding:10px 5px;display:flex;align-items:center;justify-content:center;opacity:0.85}
+.usr-thought{color:rgba(180,150,255,0.75);font-style:italic;font-size:0.88em;opacity:0.85;border-bottom:1px dashed rgba(180,150,255,0.35)}
+.emo-badge{position:fixed;top:70px;right:16px;background:var(--bg-panel);border:1px solid var(--border);padding:15px;border-radius:15px;z-index:100;display:none !important;box-shadow:0 10px 30px rgba(0,0,0,0.3);text-align:center;width:200px;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.emo-badge .icon{font-size:24px;display:block}
+.emo-badge .label{color:#0084ff;font-size:10px;font-weight:bold;text-transform:uppercase;margin:5px 0}
+.emo-badge .desc{font-size:13px;color:var(--text-sub);font-style:italic}
+.bio-modal{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:400;display:none;justify-content:center;align-items:flex-end;padding:0}
+.bio-content{background:var(--bg-panel);border-radius:20px 20px 0 0;width:100%;max-width:480px;margin:0 auto;max-height:92vh;overflow-y:auto;border:1px solid var(--border)}
+.bio-portrait-full{width:100%;height:auto;max-height:70vh;object-fit:contain;object-position:center;border-radius:20px 20px 0 0;display:block;background:#000}
+.bio-portrait-placeholder{width:100%;height:110px;background:var(--input-bg);border-radius:20px 20px 0 0;display:flex;align-items:center;justify-content:center;color:var(--text-sub);font-size:30px}
+.bio-name-center{text-align:center;padding:8px 14px 3px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.bio-name-center h3{color:#0084ff;font-size:16px;margin-bottom:2px}
+.bio-name-center .bio-sub{font-size:11px;color:var(--text-sub)}
+.bio-body{padding:0 14px 14px}
+.bio-detail-box{background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:7px 10px;margin-bottom:6px}
+.bio-detail-label{font-size:10px;color:#0084ff;font-weight:bold;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:2px}
+.bio-detail-text{font-size:12px;color:var(--text-main);line-height:1.45}
+.bio-drag-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 0}
+.dynbio-pulse{animation:dynbio-flash 0.5s ease}
+@keyframes dynbio-flash{0%{opacity:1}50%{opacity:0.4}100%{opacity:1}}
+.bio-close-btn{background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1;padding:0;z-index:60;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.15);pointer-events:all;flex-shrink:0}
+.bio-close-btn:active{opacity:0.5;transform:scale(0.9)}
+.bio-sticky-close{position:sticky;top:10px;z-index:60;display:flex;justify-content:flex-end;padding-right:12px;height:0;overflow:visible;pointer-events:none;margin-bottom:0}
+/* === COLLAPSIBLE BIO FIELDS === */
+.bio-text-collapsed{display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+.bio-text-expanded{display:block;cursor:pointer}
+.bio-expand-hint{font-size:10px;color:#0084ff;margin-top:3px;cursor:pointer;display:block;-webkit-user-select:none;user-select:none}
+
+.location-badge{display:none;font-size:10px;font-weight:700;color:rgba(255,255,255,0.85);background:rgba(0,0,0,0.45);border-radius:10px;padding:2px 9px;white-space:nowrap;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);letter-spacing:0.2px;width:fit-content;max-width:200px;overflow:hidden;text-overflow:ellipsis;line-height:1.6;text-transform:capitalize}
+.grp-location-inline{display:none;font-size:10px;font-weight:700;color:rgba(255,255,255,0.8);text-shadow:0 1px 4px rgba(0,0,0,0.8);width:100%;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.4;text-transform:capitalize}
+
+/* === RELATIONSHIP CARDS UI === */
+.rel-section{margin-top:14px;border:1px solid #0084ff33;border-radius:14px;overflow:hidden}
+.rel-section-hdr{background:linear-gradient(90deg,#0a1a30,#0c0c1a);padding:10px 14px;font-size:12px;font-weight:bold;color:#60a5fa;letter-spacing:0.5px;display:flex;align-items:center;gap:6px}
+.rel-char-card{display:flex;flex-direction:column;gap:8px;padding:10px 14px;border-bottom:1px solid #111}
+.rel-char-card:last-child{border-bottom:none}
+.rel-char-hdr{display:flex;align-items:center;gap:10px}
+.rel-char-hdr img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #0084ff44;flex-shrink:0}
+.rel-char-name{font-size:13px;font-weight:bold;color:var(--text-main);flex:1}
+.rel-char-sub{font-size:11px;color:var(--text-sub)}
+.rel-presets{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px}
+.rel-preset-btn{background:#111;border:1px solid #222;color:#aaa;border-radius:20px;padding:4px 10px;font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.rel-preset-btn:active,.rel-preset-btn.active{background:#0a1a30;border-color:#0084ff88;color:#60a5fa}
+.rel-custom-input{width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text-main);border-radius:10px;padding:7px 10px;font-size:12px;resize:none;font-family:inherit;box-sizing:border-box;min-height:32px}
+.rel-custom-input:focus{border-color:#0084ff88;outline:none}
+.rel-group-section{margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
+.rel-group-label{font-size:11px;font-weight:bold;color:#f59e0b;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.group-btn-fab{position:fixed;bottom:90px;right:20px;width:50px;height:50px;border-radius:25px;background:var(--bg-panel);border:1px solid var(--border);color:#0084ff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 15px rgba(0,0,0,0.3)}
+.group-av-stack{display:flex;flex-shrink:0}
+.group-av-stack img{width:36px;height:36px;border-radius:50%;border:2px solid var(--bg-panel);object-fit:cover;margin-left:-10px}
+.group-av-stack img:first-child{margin-left:0}
+.group-tag{font-size:10px;color:#9333ea;font-weight:bold;background:#1a0b2e;border:1px solid #3b156b;border-radius:6px;padding:1px 5px;display:inline-block;margin-left:4px}
+.member-pick-row{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;gap:12px}
+.member-pick-row img{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0}
+.member-pick-row .check{margin-left:auto;width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff}
+.member-pick-row.selected .check{background:#0084ff;border-color:#0084ff}
+.group-typing-wrap{display:flex;flex-direction:column;gap:4px;padding:0 16px}
+.group-typing-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-sub)}
+.group-typing-item img{width:20px;height:20px;border-radius:50%;object-fit:cover}
+.grp-speaker-name{font-size:11px;color:#0084ff;font-weight:bold;margin-bottom:3px;margin-left:2px}
+.form-group{margin-bottom:15px}
+.form-group label{display:block;margin-bottom:6px;color:var(--text-sub);font-size:13px;font-weight:bold}
+.form-control{width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text-main);padding:12px;border-radius:10px;font-size:15px;outline:none}
+textarea.form-control{min-height:110px}
+.btn-primary{width:100%;background:#0084ff;color:#fff;border:none;padding:14px;border-radius:10px;font-size:16px;font-weight:bold;cursor:pointer}
+.btn-ai{background:var(--btn-ai-bg);color:var(--btn-ai-txt);border:1px solid var(--btn-ai-border);width:100%;padding:14px;border-radius:10px;font-size:15px;font-weight:bold;cursor:pointer;margin-bottom:15px;display:flex;justify-content:center;align-items:center;gap:8px}
+.av-box{display:flex;align-items:center;gap:15px;background:var(--input-bg);padding:15px;border-radius:12px;border:1px solid var(--border);margin-bottom:15px}
+.av-btn-draw{background:#0084ff;color:#fff;border:none;padding:8px 15px;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer}
+.typing-indicator{display:none;flex-direction:row;align-items:flex-end;gap:10px;margin-bottom:18px;padding:0}
+.typing-av{width:35px;height:35px;border-radius:50%;object-fit:cover;border:1px solid var(--border);flex-shrink:0;margin-bottom:2px;background:var(--av-bg)}
+.typing-bubble{display:flex;align-items:center;gap:5px;background:var(--bubble-bot);border-radius:18px;border-bottom-left-radius:4px;padding:10px 16px;width:fit-content;min-width:50px}
+.typing-dot{width:7px;height:7px;border-radius:50%;background:#aaa !important;display:inline-block;animation:typingBounce 1.2s ease-in-out infinite}
+.typing-dot:nth-child(1){animation-delay:0s}
+.typing-dot:nth-child(2){animation-delay:0.2s}
+.typing-dot:nth-child(3){animation-delay:0.4s}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0);background:#666}30%{transform:translateY(-6px);background:#0084ff}}
+
+/* === DICE BUTTON === */
+.field-row{display:flex;align-items:flex-start;gap:6px}
+.field-row .form-control{flex:1}
+.dice-btn{background:var(--input-bg);border:1px solid var(--border);color:var(--text-sub);width:38px;min-width:38px;height:38px;border-radius:10px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.dice-btn:active{transform:scale(0.85);background:#0084ff;color:#fff}
+.dice-btn.spin{animation:diceSpin .4s ease}
+@keyframes diceSpin{0%{transform:rotate(0deg) scale(1)}50%{transform:rotate(180deg) scale(1.2)}100%{transform:rotate(360deg) scale(1)}}
+
+/* === ERROR LOG === */
+#error-log{background:#1a0000;border:1px solid #550000;border-radius:10px;padding:10px;margin-bottom:15px;font-size:11px;color:#ff6666;font-family:monospace;max-height:120px;overflow-y:auto;display:none}
+#error-log .err-header{color:#ff4444;font-weight:bold;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center}
+#sync-log{background:#0a0a2a;border:1px solid #2a1a5e;border-radius:10px;padding:10px;margin-bottom:15px;font-size:11px;color:#a78bfa;font-family:monospace;max-height:120px;overflow-y:auto;display:none}
+#sync-log .sync-header{color:#8b5cf6;font-weight:bold;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center}
+#sync-log .sync-time{color:#6d28d9;margin-right:6px;font-size:10px}
+.err-entry{border-bottom:1px solid #330000;padding:3px 0;line-height:1.4}
+.err-time{color:#ff9999;margin-right:6px}
+
+/* === PORTRAIT SECTION === */
+.portrait-box{background:var(--input-bg);border:1px solid var(--border);border-radius:12px;padding:15px;margin-bottom:15px}
+.portrait-preview-img{width:100%;max-width:100%;object-fit:contain;border-radius:10px;border:1px solid var(--border);display:block;margin:10px auto}
+.btn-portrait{background:linear-gradient(135deg,#6a11cb,#2575fc);color:#fff;border:none;width:100%;padding:13px;border-radius:10px;font-size:15px;font-weight:bold;cursor:pointer;margin-bottom:10px;display:flex;justify-content:center;align-items:center;gap:8px}
+.btn-portrait:disabled{opacity:.5;cursor:not-allowed}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0}
+.toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#444;border-radius:24px;cursor:pointer;transition:.3s}
+.toggle-slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s}
+.toggle-switch input:checked+.toggle-slider{background:#0084ff}
+.toggle-switch input:checked+.toggle-slider:before{transform:translateX(20px)}
+
+/* === CHAT BACKGROUND === */
+#sc-chat.has-bg{background-size:cover;background-position:center top;background-attachment:local}
+#sc-chat.has-bg .chat-hdr{background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;border-bottom:none}
+#sc-chat.has-bg #chat-container{background:transparent}
+#sc-chat.has-bg .bubble.bot{background:rgba(10,10,10,.82);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+#sc-chat.has-bg .bubble.usr{background:rgba(0,100,210,.85)}
+/* Keep old selector for compatibility */
+#chat-container.has-bg .bubble.bot{background:rgba(10,10,10,.82);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+#chat-container.has-bg .bubble.usr{background:rgba(0,100,210,.85)}
+
+/* === DELETE / CLEAR BUTTONS === */
+.bot-delete-btn{background:none;border:none;color:#ff4444;font-size:16px;padding:8px 10px;cursor:pointer;flex-shrink:0;opacity:0.7;transition:opacity .2s}
+.bot-delete-btn:active{opacity:1;transform:scale(0.9)}
+.btn-clear-chat{background:none;border:none;color:#ff6666;font-size:17px;cursor:pointer;padding:5px 8px;position:relative}
+.btn-clear-chat:active{transform:scale(0.9)}
+
+/* === CONTINUE BUTTON === */
+.continue-btn{background:#0084ff;border:none;color:#fff;border-radius:20px;padding:6px 14px;font-size:13px;cursor:pointer;margin-top:5px;width:fit-content;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:bold}
+.continue-btn:active{background:#006acc;transform:scale(0.95)}
+/* === BIRTH BUTTON === */
+#birth-btn-wrap{display:none;position:absolute;bottom:100%;right:12px;margin-bottom:6px;z-index:50}
+#birth-btn{background:#ef4444;border:none;color:#fff;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:5px;box-shadow:0 2px 10px #ef444466;animation:laborPulse 2s ease-in-out infinite;white-space:nowrap}
+#birth-btn:active{transform:scale(0.95);opacity:0.9}
+@keyframes laborPulse{0%,100%{box-shadow:0 2px 10px #ef444466}50%{box-shadow:0 2px 16px #ef4444bb}}
+
+/* === CYCLE-CHANGE CONFIRM BANNER === */
+#cycle-change-banner{
+    position:fixed;bottom:80px;left:12px;right:12px;z-index:500;
+    background:linear-gradient(135deg,#1a0b2e,#0d1a2e);
+    border:1px solid #7c3aed88;border-radius:16px;
+    padding:12px 14px;display:none;flex-direction:column;gap:8px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.6);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    animation:bannerSlideUp .25s ease
+}
+@keyframes bannerSlideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+#cycle-change-banner .banner-title{font-size:12px;font-weight:bold;color:#a78bfa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+#cycle-change-banner .banner-desc{font-size:13px;color:#e0d0ff;line-height:1.4}
+#cycle-change-banner .banner-buttons{display:flex;gap:8px;margin-top:4px}
+.banner-btn-confirm{flex:1;background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:9px;font-size:13px;font-weight:bold;cursor:pointer}
+.banner-btn-confirm:active{background:#6d28d9}
+.banner-btn-dismiss{background:none;border:1px solid #4a3060;color:#a78bfa;border-radius:10px;padding:9px 14px;font-size:13px;cursor:pointer}
+.banner-btn-dismiss:active{background:#1a0b2e}
+
+/* === CUSTOM ACTIVITY BUILDER === */
+.custom-act-row{display:flex;gap:5px;align-items:center;margin-bottom:6px;background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:6px 8px}
+.custom-act-name{flex:1;background:transparent;border:none;color:var(--text-main);font-size:12px;outline:none;font-family:inherit;min-width:0}
+.custom-act-time{width:72px;background:transparent;border:none;color:#f59e0b;font-size:12px;outline:none;font-family:inherit;flex-shrink:0}
+.custom-act-sep{color:var(--text-sub);font-size:11px;flex-shrink:0}
+.custom-act-del{background:none;border:none;color:#ff6666;font-size:14px;cursor:pointer;padding:0 2px;flex-shrink:0;line-height:1}
+.custom-act-add{background:none;border:1px dashed #f59e0b66;color:#f59e0b;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;width:100%;margin-top:2px;transition:all .2s}
+.custom-act-add:active{background:#f59e0b22}
+
+/* === HINT BUTTON === */
+.hint-btn{background:none;border:none;color:#f59e0b;font-size:20px;cursor:pointer;padding:6px 4px;flex-shrink:0;transition:color .2s}
+.hint-btn:active{color:#fbbf24;transform:scale(0.9)}
+
+/* === HINT MODAL === */
+.hint-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;display:none;justify-content:flex-end;align-items:flex-end;padding-bottom:80px;padding-left:10px;padding-right:10px}
+.hint-panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:16px;padding:14px;width:100%;max-width:480px;margin:0 auto}
+.hint-title{font-size:12px;color:#f59e0b;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.hint-option{background:var(--bubble-bot);border:1px solid var(--border);border-radius:14px;padding:10px 14px;margin-bottom:8px;font-size:14px;cursor:pointer;line-height:1.5;transition:all .2s;color:var(--bubble-bot-txt);font-family:inherit}
+.hint-option:last-child{margin-bottom:0}
+.hint-option:active{border-color:#0084ff;background:#0084ff22}
+.hint-action{font-style:italic;color:var(--action-text)}
+.hint-loading{text-align:center;color:var(--text-sub);font-size:13px;padding:20px;font-style:italic}
+
+/* === VIRTUAL DATE BADGE === */
+#virtual-date-badge{font-size:10px;color:#9b7fe8;background:#1a0b2e;border:1px solid #3b156b;border-radius:10px;padding:2px 8px;display:inline-block;margin-top:2px;cursor:default;letter-spacing:0.3px}
+
+/* === SCROLL TO BOTTOM BUTTON === */
+#scroll-bottom-btn{position:fixed;bottom:80px;right:16px;width:40px;height:40px;border-radius:50%;background:#0084ff;color:#fff;border:none;font-size:18px;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 4px 15px rgba(0,132,255,0.5);z-index:150;transition:all .2s}
+#scroll-bottom-btn.visible{display:flex}
+#scroll-bottom-btn:active{transform:scale(0.9)}
+#scroll-top-btn{position:fixed;bottom:128px;right:16px;width:40px;height:40px;border-radius:50%;background:#222;color:#aaa;border:1px solid #333;font-size:18px;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.5);z-index:150;transition:all .2s}
+#scroll-top-btn.visible{display:flex}
+#scroll-top-btn:active{transform:scale(0.9)}
+
+/* === REPRODUCTIVE HEALTH PANEL === */
+.repro-panel{background:var(--input-bg);border:1px solid #7c3aed44;border-radius:12px;padding:10px;margin-bottom:8px}
+.repro-title{font-size:10px;font-weight:bold;color:#a855f7;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.repro-phase-bar{height:6px;border-radius:3px;background:var(--border);margin:6px 0;overflow:hidden}
+.repro-phase-fill{height:100%;border-radius:3px;transition:width .5s}
+.repro-stat-row{display:flex;gap:6px;margin-bottom:6px}
+.repro-stat{flex:1;background:var(--bg-panel);border-radius:8px;padding:5px 7px;text-align:center;border:1px solid var(--border)}
+.repro-stat .rs-val{font-size:16px;font-weight:bold;display:block}
+.repro-stat .rs-lbl{font-size:9px;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.4px}
+.preg-week-badge{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#1a0028,#2d0045);border:1px solid #a855f7;border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.preg-week-badge .pw-num{font-size:44px;font-weight:bold;color:#c084fc;line-height:1;min-width:56px;text-align:center;flex-shrink:0}
+.preg-week-badge .pw-info{text-align:left;flex:1}
+.preg-week-badge .pw-label{font-size:13px;color:#c084fc;font-weight:bold;margin-bottom:3px}
+.preg-week-badge .pw-desc{font-size:11px;color:var(--text-sub);line-height:1.5}
+.preg-baby-box{background:var(--bg-main);border:1px solid #a855f733;border-radius:10px;padding:8px 10px;margin-bottom:8px;font-size:11px;color:#c084fc;line-height:1.6}
+.preg-baby-box .pb-label{font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:0.6px;color:#7c3aed;margin-bottom:4px}
+.preg-symptom-section{margin-top:8px}
+.preg-symptom-section .ps-label{font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:0.6px;color:#7c3aed;margin-bottom:5px}
+.repro-event-log{max-height:80px;overflow-y:auto;font-size:10px;color:var(--text-sub)}
+.repro-event-log .re-item{border-bottom:1px solid var(--border);padding:3px 0;line-height:1.4}
+
+/* === REPRO RELOAD BUTTON === */
+.repro-reload-btn{background:none;border:1px solid #7c3aed66;color:#a855f7;border-radius:8px;padding:3px 8px;font-size:11px;cursor:pointer;margin-left:auto;display:flex;align-items:center;gap:4px;transition:all .2s;white-space:nowrap}
+.repro-reload-btn:active{background:#a855f720;transform:scale(0.95)}
+.repro-reload-btn.loading .fa-sync-alt{animation:spin .8s linear infinite}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.repro-reload-status{font-size:10px;color:var(--text-sub);text-align:center;padding:4px 0;font-style:italic;display:none}
+
+/* === QUICK STATUS TOOLTIP === */
+.status-tooltip{position:fixed;background:var(--bg-panel);border:1px solid var(--border);border-radius:14px;padding:10px 14px;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,0.5);display:none;min-width:160px;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.status-tooltip .st-name{font-size:12px;font-weight:bold;color:#0084ff;margin-bottom:6px}
+.status-tooltip .st-row{display:flex;align-items:center;gap:8px}
+.status-tooltip .st-icon{font-size:26px}
+.status-tooltip .st-info .st-label{font-size:15px;font-weight:bold}
+.status-tooltip .st-info .st-desc{font-size:11px;color:var(--text-sub);margin-top:2px}
+.status-tooltip .st-bio-link{font-size:11px;color:#0084ff;margin-top:8px;text-align:right;cursor:pointer}
+
+/* === STATUS BADGE === */
+.status-badge{display:none;align-items:center;gap:6px;justify-content:center;padding:5px 10px;background:var(--input-bg);border:1px solid var(--border);border-radius:20px;margin:6px auto;width:fit-content}
+
+/* === PORTRAIT UPDATE BTN === */
+.btn-update-portrait{background:none;border:none;color:#9333ea;font-size:17px;cursor:pointer;padding:5px 8px}
+.btn-update-portrait:active{transform:scale(0.9)}
+
+/* === BOTTOM NAV BAR === */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:70px;background:var(--header-bg);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;z-index:50}
+.bottom-nav-btn{background:none;border:none;color:var(--text-sub);font-size:22px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 10px;flex:1;transition:color .2s}
+.bottom-nav-btn:active{opacity:0.6}
+.bottom-nav-btn.active{color:#0084ff}
+.bottom-nav-btn span{font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:0.3px}
+.bottom-nav-center{background:#0084ff;border:none;width:60px;height:60px;border-radius:30px;color:#fff;font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,132,255,0.5);margin-bottom:12px;flex-shrink:0;transition:all .2s}
+.bottom-nav-center:active{transform:scale(0.92);background:#006acc}
+
+/* === BOT GRID === */
+#bot-list{padding:10px 10px 80px 10px!important}
+.bot-grid-wrap{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;min-height:0}
+.bot-card{background:var(--bg-panel);border-radius:14px;overflow:hidden;border:1px solid var(--border);cursor:pointer;position:relative;transition:opacity .2s;min-width:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.bot-card:active{opacity:0.75}
+.bot-card-img{width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--av-bg);display:block}
+.bot-card-img-wrap{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;background:var(--av-bg)}
+.bot-card-portrait{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top}
+.bot-card-avatar{width:60%;aspect-ratio:1/1;border-radius:50%;object-fit:cover;position:absolute;bottom:8px;left:8px;border:2px solid var(--bg-panel);background:var(--av-bg)}
+.bot-card-body{padding:8px 10px 10px}
+.bot-card-name{font-size:14px;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bot-card-desc{font-size:11px;color:var(--text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.bot-card-del{position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.55);border:none;color:#ff4444;width:26px;height:26px;border-radius:50%;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.bot-card-del:active{transform:scale(0.9)}
+/* === FAV STAR === */
+.bot-card-fav{position:absolute;top:6px;left:6px;background:rgba(0,0,0,0.55);border:none;color:#f59e0b;width:26px;height:26px;border-radius:50%;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.bot-card-time{font-size:10px;color:var(--text-sub);position:absolute;top:6px;left:8px;background:rgba(0,0,0,0.5);border-radius:8px;padding:2px 6px;color:#fff;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+/* Group card - same 2-column grid as bot cards */
+.bot-card-group{background:var(--bg-panel);border-radius:14px;overflow:hidden;border:1px solid var(--border);cursor:pointer;position:relative;transition:opacity .2s}
+.bot-card-group:active{opacity:0.75}
+.grp-card-img-wrap{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;background:var(--av-bg);display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.grp-card-img-wrap.single{display:flex}
+.grp-card-img-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.grp-card-img-wrap.single img{width:100%;height:100%;object-fit:cover}
+/* === LONG-PRESS CONTEXT MENU === */
+.card-ctx-overlay{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.55);display:flex;align-items:flex-end;justify-content:center;padding-bottom:40px}
+.card-ctx-panel{background:#111;border:1px solid #2a2a2a;border-radius:20px;padding:10px;width:240px;box-shadow:0 8px 32px rgba(0,0,0,0.8)}
+.card-ctx-name{text-align:center;font-size:13px;font-weight:bold;color:#aaa;padding:6px 0 12px;border-bottom:1px solid #222;margin-bottom:8px}
+.card-ctx-btn{display:flex;align-items:center;gap:12px;padding:13px 16px;border:none;background:none;color:#fff;font-size:15px;width:100%;border-radius:12px;cursor:pointer;transition:background .15s}
+.card-ctx-btn:active,.card-ctx-btn:hover{background:#222}
+.card-ctx-btn.danger{color:#ff5555}
+.card-ctx-btn.fav{color:#f59e0b}
+.card-ctx-btn.hide-btn{color:#60a5fa}
+.card-ctx-btn i{width:20px;text-align:center}
+/* === APPEARANCE TAG CHIPS === */
+.app-tag{display:inline-flex;align-items:center;gap:4px;background:#0f1f0f;border:1px solid #22c55e55;color:#86efac;border-radius:20px;padding:4px 10px 4px 12px;font-size:12px;font-weight:500;cursor:pointer;-webkit-user-select:none;user-select:none;transition:background .15s}
+.app-tag:hover{background:#1a3a1a;border-color:#22c55e88}
+.app-tag:active{opacity:.7}
+.app-tag-x{color:rgba(134,239,172,0.5);font-size:13px;font-weight:700;line-height:1;padding-left:4px}
+kbd{font-family:inherit}
+.msg-token-badge{font-size:10px;color:#555;margin-top:3px;text-align:right;padding-right:4px;font-family:monospace}
+/* === HIDDEN BOTS BUTTON === */
+.hidden-bots-btn{background:rgba(255,255,255,0.08);border:1px solid #333;color:#aaa;border-radius:10px;padding:4px 10px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px}
+.hidden-bots-btn:active{opacity:.7}
+/* === PASSWORD MODAL === */
+.pw-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:700;display:flex;align-items:center;justify-content:center;padding:20px;display:none}
+.pw-box{background:#111;border:1px solid #2a2a2a;border-radius:20px;padding:28px 24px;width:100%;max-width:320px;text-align:center}
+.pw-title{font-size:17px;font-weight:bold;margin-bottom:6px}
+.pw-sub{font-size:12px;color:#666;margin-bottom:18px}
+.pw-input{width:100%;background:#0c0c0c;border:1px solid #333;color:#fff;padding:12px;border-radius:12px;font-size:20px;text-align:center;letter-spacing:4px;outline:none;margin-bottom:14px}
+.pw-error{color:#f87171;font-size:12px;margin-bottom:10px;display:none}
+.folder-row{grid-column:1/-1;background:var(--bg-panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:2px}
+.folder-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;-webkit-user-select:none;user-select:none;transition:background .15s}
+.folder-header:active{background:var(--bg-main)}
+.folder-icon{font-size:20px;flex-shrink:0}
+.folder-name{flex:1;font-size:14px;font-weight:bold;color:var(--text-main)}
+.folder-count{font-size:11px;color:var(--text-sub);background:var(--bg-main);border-radius:10px;padding:2px 8px}
+.folder-chevron{color:var(--text-sub);font-size:12px;transition:transform .2s;flex-shrink:0}
+.folder-chevron.open{transform:rotate(90deg)}
+.folder-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 10px 12px}
+.folder-grid-hidden{display:none}
+/* folder management modal */
+.folder-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:650;display:flex;align-items:flex-end;justify-content:center;display:none}
+.folder-modal-overlay.open{display:flex}
+.folder-modal{background:#111;border:1px solid #222;border-radius:22px 22px 0 0;padding:0 0 20px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,0.8)}
+.folder-modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px;border-bottom:1px solid #1e1e1e}
+.folder-modal-title{font-size:15px;font-weight:bold;color:#fff}
+.folder-modal-close{background:none;border:none;color:#555;font-size:20px;cursor:pointer}
+.folder-modal-input{background:#0c0c0c;border:1px solid #2a2a2a;color:#fff;padding:11px 14px;border-radius:12px;font-size:14px;width:100%;outline:none;margin-bottom:10px}
+.folder-modal-input:focus{border-color:#0084ff55}
+.folder-modal-btn{background:#0084ff;color:#fff;border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:bold;width:100%;cursor:pointer}
+.folder-modal-btn:active{opacity:.8}
+.folder-item-row{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid #181818;cursor:pointer;transition:background .12s}
+.folder-item-row:active,.folder-item-row:hover{background:#1a1a1a}
+.folder-item-row i{color:#0084ff;width:20px;text-align:center}
+.folder-item-row.danger{color:#ff5555}
+.folder-item-row.danger i{color:#ff5555}
+.folder-emoji-row{display:flex;gap:8px;flex-wrap:wrap;padding:10px 0 4px}
+.folder-emoji-btn{font-size:20px;padding:6px;border-radius:8px;cursor:pointer;border:2px solid transparent;background:var(--bg-main);transition:all .15s}
+.folder-emoji-btn:active,.folder-emoji-btn.sel{border-color:#0084ff;background:#0084ff22}
+.grp-badge{position:absolute;top:6px;left:8px;background:rgba(147,51,234,0.85);color:#fff;font-size:9px;font-weight:bold;border-radius:8px;padding:2px 6px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);letter-spacing:0.3px}
+.grp-card-body{padding:8px 10px 10px}
+.grp-card-name{font-size:14px;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grp-card-desc{font-size:11px;color:var(--text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+
+/* === BODY MEASUREMENTS === */
+.body-meas-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px}
+.body-meas-stat{background:var(--bg-main);border-radius:8px;padding:7px 6px;text-align:center;border:1px solid var(--border)}
+.body-meas-val{font-size:15px;font-weight:bold;color:#f472b6;display:block}
+.body-meas-lbl{font-size:9px;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.4px;margin-top:1px}
+.body-meas-full{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px}
+.body-meas-row{background:var(--bg-main);border-radius:8px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border)}
+.body-meas-row-lbl{font-size:11px;color:var(--text-sub)}
+.body-meas-row-val{font-size:12px;font-weight:bold;color:#f9a8d4}
+.body-breast-change{margin-top:6px;padding:7px 10px;background:#1a0011;border:1px solid #f472b622;border-radius:8px;font-size:11px;color:#f9a8d4;line-height:1.5}
+.body-change-tag{font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;padding:1px 6px;border-radius:8px;margin-bottom:4px;display:inline-block}
+.body-note{font-size:10px;color:var(--text-sub);font-style:italic;margin-top:5px;line-height:1.4;padding:4px 6px;border-left:2px solid #f472b644}
+
+/* === FETUS CARDS === */
+.fetus-card{background:var(--input-bg);border:1px solid #a855f733;border-radius:12px;padding:10px 12px;margin-bottom:8px;position:relative}
+.fetus-card-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.fetus-num{font-size:13px;font-weight:bold;color:#c084fc}
+.fetus-gender-badge{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:bold;border:1px solid currentColor}
+.fetus-size-row{display:flex;gap:10px;margin-bottom:6px}
+.fetus-stat{flex:1;background:var(--bg-main);border-radius:8px;padding:6px 8px;text-align:center}
+.fetus-stat-val{font-size:14px;font-weight:bold;color:#c084fc;display:block}
+.fetus-stat-lbl{font-size:9px;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.5px}
+.fetus-milestone{font-size:11px;color:var(--text-sub);line-height:1.4;font-style:italic;padding-top:6px;border-top:1px solid var(--border)}
+.fetus-gender-btn{display:flex;gap:6px;margin-top:6px}
+.fetus-gender-btn button{flex:1;border:1px solid var(--border);background:var(--bg-main);color:var(--text-sub);border-radius:8px;padding:4px;font-size:11px;cursor:pointer;transition:all .15s}
+.fetus-gender-btn button.active-m{background:#1e3a5f;border-color:#60a5fa;color:#60a5fa;font-weight:bold}
+.fetus-gender-btn button.active-f{background:#3d1a2e;border-color:#f9a8d4;color:#f9a8d4;font-weight:bold}
+.fetus-gender-btn button:active{transform:scale(0.95)}
+/* === PERSONALITY TAG PILLS === */
+.pers-tag{background:var(--bubble-bot);border:1px solid var(--border);color:var(--text-sub);padding:6px 13px;border-radius:20px;font-size:13px;cursor:pointer;transition:all .15s;-webkit-user-select:none;user-select:none}
+.pers-tag:active{transform:scale(0.93)}
+.pers-tag.selected{background:#1a3a1a;border-color:#22c55e;color:#22c55e;font-weight:600}
+
+.persona-pill{display:inline-flex;align-items:center;gap:6px;background:#1a0b2e;border:1px solid #3b156b;border-radius:20px;padding:4px 10px;font-size:12px;color:#b259ff;cursor:pointer}
+.persona-pill i{font-size:10px}
+
+/* ===== TRAIT CHIP SYSTEM ===== */
+.trait-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px 5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:default;-webkit-user-select:none;user-select:none;vertical-align:middle}
+.trait-chip.mutable{background:#0066cc;border:1px solid #0084ff;color:#fff}
+.trait-chip.immutable{background:#1a0b2e;border:1px solid #7c3aed88;color:#c084fc}
+.personality-chip{display:inline-flex;align-items:center;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:default;user-select:none;vertical-align:middle;background:#0a1a30;border:1px solid #0084ff88;color:#60a5fa}
+.trait-chip.personality{background:#0a1a30;border:1px solid #0084ff88;color:#60a5fa}
+.trait-chip.genetic{background:#1a0b2e;border:1px solid #7c3aed88;color:#c084fc}
+.chip-x{background:none;border:none;color:rgba(255,255,255,0.45);font-size:14px;font-weight:700;cursor:pointer;padding:0 0 0 4px;line-height:1;flex-shrink:0}
+.chip-x:active{color:#ff4444}
+/* Trait picker overlay */
+.trait-picker-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:700;display:none;align-items:flex-end;justify-content:center}
+.trait-picker-panel{background:var(--bg-panel);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:80vh;display:flex;flex-direction:column;border:1px solid var(--border)}
+.trait-picker-hdr{padding:14px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0}
+.trait-picker-search{width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text-main);padding:10px 14px;border-radius:12px;font-size:15px;outline:none;font-family:inherit;box-sizing:border-box}
+.trait-picker-tabs{display:flex;gap:6px;margin-top:10px}
+.trait-picker-tab{flex:1;padding:7px;border-radius:10px;border:1px solid var(--border);background:var(--bg-main);color:var(--text-sub);font-size:12px;font-weight:bold;cursor:pointer;text-align:center;transition:all .15s}
+.trait-picker-tab.active{background:#0084ff22;border-color:#0084ff;color:#0084ff}
+.trait-picker-body{flex:1;overflow-y:auto;padding:10px 14px 6px}
+.trait-group-label{font-size:10px;font-weight:bold;color:var(--text-sub);text-transform:uppercase;letter-spacing:0.5px;margin:10px 0 6px;padding-left:2px}
+.trait-picker-item{display:flex;align-items:center;padding:10px 12px;border-radius:10px;cursor:pointer;gap:10px;border:1px solid transparent;transition:background .12s}
+.trait-picker-item:hover{background:var(--bubble-bot)}
+.trait-picker-item.selected{background:#0a1a30;border-color:#0084ff33}
+.trait-picker-item.selected.imm{background:#1a0b2e;border-color:#7c3aed33}
+.trait-picker-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;transition:all .15s}
+.trait-picker-item.selected .trait-picker-check{background:#0084ff;border-color:#0084ff;color:#fff}
+.trait-picker-item.selected.imm .trait-picker-check{background:#7c3aed;border-color:#7c3aed;color:#fff}
+.trait-picker-name{flex:1;font-size:17px;color:var(--text-main)}
+.trait-picker-badge{font-size:10px;padding:2px 7px;border-radius:8px;font-weight:bold;flex-shrink:0}
+.badge-imm{background:#1a0b2e;color:#a78bfa;border:1px solid #7c3aed55}
+.badge-mut{background:#0a1a30;color:#93c5fd;border:1px solid #0084ff55}
+.trait-picker-footer{padding:10px 14px;border-top:1px solid var(--border);flex-shrink:0}
+.trait-custom-row{display:flex;gap:8px;margin-top:8px}
+.trait-custom-input{flex:1;background:var(--input-bg);border:1px solid var(--border);color:var(--text-main);padding:9px 12px;border-radius:10px;font-size:14px;outline:none;font-family:inherit}
+
+/* ═══ REALISTIC / ANIME TOGGLE ═══ */
+.create-toggle-strip{
+    display:flex;
+    background:#0a0a0a;
+    border-bottom:1px solid #1a1a1a;
+    padding:10px 16px;
+    gap:8px;
+    flex-shrink:0;
+    position:relative;
+    z-index:50;
+}
+.ctog-btn{
+    flex:1;
+    padding:10px 0;
+    border:1.5px solid #222;
+    border-radius:12px;
+    font-size:14px;
+    font-weight:bold;
+    cursor:pointer;
+    background:#111;
+    color:#555;
+    transition:all .2s;
+    -webkit-tap-highlight-color:rgba(0,0,0,0);
+    touch-action:manipulation;
+    -webkit-user-select:none;user-select:none;
+    position:relative;
+    z-index:50;
+    -webkit-appearance:none;
+    appearance:none;
+}
+.ctog-btn.on-real{
+    background:#0d2a4a;
+    border-color:#0084ff;
+    color:#60b3ff;
+}
+.ctog-btn.on-anime{
+    background:linear-gradient(135deg,#2a0050,#3a0030);
+    border-color:#a855f7;
+    color:#e879f9;
+}
+/* Anime panel */
+.anime-panel{
+    display:none;
+    background:#08000f;
+    border-bottom:1px solid #2d0060;
+    padding:16px;
+    flex-shrink:0;
+}
+.anime-panel-title{
+    font-size:11px;
+    font-weight:bold;
+    color:#7c3aed;
+    text-transform:uppercase;
+    letter-spacing:.7px;
+    margin-bottom:12px;
+}
+.anime-inp{
+    width:100%;
+    box-sizing:border-box;
+    background:#0d0020;
+    border:1.5px solid #3b156b;
+    color:#e9d5ff;
+    padding:13px 14px;
+    border-radius:12px;
+    font-size:15px;
+    outline:none;
+    font-family:inherit;
+    display:block;
+    margin-bottom:8px;
+}
+.anime-inp::placeholder{color:#3b1a5a}
+.anime-go-btn{
+    width:100%;
+    background:linear-gradient(135deg,#7c3aed,#db2777);
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    padding:14px;
+    font-size:15px;
+    font-weight:bold;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:rgba(0,0,0,0);
+    margin-bottom:10px;
+}
+.anime-go-btn:active{opacity:.7}
+.anime-go-btn:disabled{opacity:.4;cursor:not-allowed}
+.anime-status{font-size:13px;text-align:center;min-height:18px;color:#a855f7;margin-bottom:4px}
+.anime-hint{font-size:11px;color:#3b1a5a;text-align:center;line-height:1.6}
+/* Anime mode tint */
+#sc-create.anime-mode{background:#05000f}
+#sc-create.anime-mode .form-control{border-color:#3b156b;background:#0d0020;color:#e9d5ff}
+#sc-create.anime-mode .form-control::placeholder{color:#3b1a5a}
+#sc-create.anime-mode .form-group label{color:#c084fc}
+#sc-create.anime-mode .btn-primary{background:linear-gradient(135deg,#7c3aed,#db2777)}
+
+    /* ── Utility classes to replace repeated inline styles ── */
+    .lbl-section{font-size:10px;color:#888;text-transform:uppercase;font-weight:bold;letter-spacing:0.5px}
+    .lbl-warning{font-size:10px;color:#f59e0b;font-weight:bold;display:block;margin-bottom:4px}
+    .lbl-sub{font-size:10px;color:var(--text-sub);margin-bottom:4px}
+    .input-full{width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text-main);border-radius:8px;padding:8px 10px;font-size:13px;box-sizing:border-box}
+    .btn-icon{background:none;border:none;color:var(--text-sub);cursor:pointer;padding:4px}
+    
+    /* Flexbox utilities */
+    .flex-center{display:flex;align-items:center}
+    .flex-center-gap{display:flex;align-items:center;gap:8px}
+    .flex-col-end{display:flex;flex-direction:column;align-items:flex-end}
+    .flex-1{flex:1}
+    
+    /* Badge utilities */
+    .badge-base{font-size:10px;border-radius:10px;padding:1px 7px;letter-spacing:0.3px}
+    .badge-season{color:#4ade80;background:#0d1a00;border:1px solid #4ade8044}
+    .badge-clock{color:#f59e0b;background:#1a0e00;border:1px solid #f59e0b44}
+    .badge-date{color:#9333ea;background:#1a0b2e;border:1px solid #3b156b;border-radius:8px;padding:1px 6px;font-size:11px}
+    
+    /* Clickable utilities */
+    .clickable{cursor:pointer}
+    .text-left{text-align:left}
+    .gap-2{gap:2px}
+    .gap-4{gap:4px}
+    .gap-8{gap:8px}
+    .mr-6{margin-right:6px}
+    
+    /* Relationship dropdown styling for dark mode */
+    .rel-type-select {
+        background-color: var(--card-bg, #1a1a2e) !important;
+        color: var(--text-main, #e0e0e0) !important;
+    }
+    .rel-type-select option {
+        background-color: var(--card-bg, #1a1a2e) !important;
+        color: var(--text-main, #e0e0e0) !important;
+    }
+    
+    /* Ensure hint and persona buttons are clickable */
+    .hint-btn, .persona-btn {
+        position: relative;
+        z-index: 100;
+        pointer-events: auto;
+        cursor: pointer;
+        background: transparent;
+        border: none;
+        font-size: 16px;
+        padding: 6px;
+        border-radius: 6px;
+        transition: background 0.2s;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .hint-btn:hover, .persona-btn:hover {
+        background: rgba(255,255,255,0.1);
+    }
+    .hint-btn:active, .persona-btn:active {
+        transform: scale(0.9);
+    }
+    
+    /* Group typing area should not block clicks when visible */
+    .group-typing-wrap {
+        position: relative;
+        z-index: 5;
+    }
+</style>
+
+</head>
+<body>
+
+<div id="sc-home" class="screen">
+    <div class="home-hdr">
+        <h1>Grace AI</h1>
+        <div style="display:flex;align-items:center;gap:8px">
+            <button class="hidden-bots-btn" onclick="openHiddenBots()" title="Hidden characters"><i class="fas fa-eye-slash"></i></button>
+            <button class="hidden-bots-btn" onclick="openFolderManager()" title="Folders" style="color:#a78bfa;border-color:#7c3aed44;background:rgba(124,58,237,0.12)"><i class="fas fa-folder"></i></button>
+            <button class="hdr-btn" onclick="toggleTheme()" id="theme-btn" style="margin-right:10px" title="Toggle theme"><i class="fas fa-moon"></i></button>
+            <button class="hdr-btn" onclick="openScreen('sc-settings')" title="Settings"><i class="fas fa-cog"></i></button>
+
+        </div>
+    </div>
+
+    <div id="bot-list"></div>
+
+    
+    
+    <div class="bottom-nav">
+        <button class="bottom-nav-btn active" onclick="scrollToTop()"><i class="fas fa-home"></i><span>Home</span></button>
+        <button class="bottom-nav-btn" onclick="openGroupCreateScreen()"><i class="fas fa-users"></i><span>Group</span></button>
+        <button class="bottom-nav-center" onclick="openScreen('sc-create')" title="New Character"><i class="fas fa-plus"></i></button>
+        <button class="bottom-nav-btn" onclick="openScreen('sc-create-persona')"><i class="fas fa-user-circle"></i><span>Persona</span></button>
+        <button class="bottom-nav-btn" onclick="openScreen('sc-settings')"><i class="fas fa-cog"></i><span>Settings</span></button>
+    </div>
+</div>
+
+<div id="sc-chat" class="screen">
+    <div class="chat-hdr">
+        <button class="c-back" onclick="closeChat()" title="Back"><i class="fas fa-chevron-left"></i></button>
+        <div style="flex:1;text-align:left;cursor:pointer;line-height:1.2;padding-left:4px" onclick="showBioPopup()">
+            <b id="c-name" style="font-size:19px">Bot Name</b>
+            <div id="chat-location-badge" class="location-badge" style="margin-top:2px"></div>
+        </div>
+        
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin-right:6px">
+            <div id="virtual-season-badge" style="display:none;font-size:10px;color:#4ade80;background:#0d1a00;border:1px solid #4ade8044;border-radius:10px;padding:1px 7px;letter-spacing:0.3px">❄️</div>
+            <div id="virtual-date-badge" style="display:none;cursor:pointer" onclick="showWeekCalendar(event)">📅 Day 1</div>
+            <div id="virtual-clock-badge" style="display:none;font-size:10px;color:#f59e0b;background:#1a0e00;border:1px solid #f59e0b44;border-radius:10px;padding:1px 7px;letter-spacing:0.3px;cursor:pointer" onclick="showTimePicker(event)">⏰ 09:00</div>
+        </div>
+        
+        <div style="position:relative">
+            <button class="hdr-icon-btn" onclick="toggleChatSettings(event)" title="Settings" style="font-size:19px;padding:4px 6px">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <div class="settings-overlay" id="chat-settings-overlay" onclick="closeChatSettings()"></div>
+            <div id="chat-settings-menu">
+                <div class="settings-drag-handle"></div>
+                <div class="settings-sheet-title">Chat Settings</div>
+                <div class="settings-item" onclick="toggleModelPicker();closeChatSettings()">
+                    <i class="fas fa-robot"></i> Select AI model
+                    <span id="c-model" style="font-size:11px;color:#0084ff;margin-left:auto;max-width:100px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap">Llama 3.1 8B</span>
+                </div>
+                <div class="reply-length-row" id="reply-len-row-solo">
+                    <i class="fas fa-text-height"></i>
+                    <span class="reply-length-label">Reply Length</span>
+                    <div class="reply-len-slider-wrap">
+                        <input type="range" class="reply-len-slider" id="reply-len-slider-1" min="0" max="3" step="1" value="1" oninput="setReplyLengthSlider(this.value)">
+                        <div class="reply-len-labels">
+                            <div class="reply-len-opt" data-len="short"><span class="reply-len-opt-name">Short</span><span class="reply-len-opt-hint">~40 words</span></div>
+                            <div class="reply-len-opt active" data-len="medium"><span class="reply-len-opt-name">Medium</span><span class="reply-len-opt-hint">~65 words</span></div>
+                            <div class="reply-len-opt" data-len="long"><span class="reply-len-opt-name">Long</span><span class="reply-len-opt-hint">~100 words</span></div>
+                            <div class="reply-len-opt" data-len="verylong"><span class="reply-len-opt-name">Very Long</span><span class="reply-len-opt-hint">~140 words</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex;border-bottom:1px solid #181818">
+                    <div class="settings-item" style="flex:1;border-bottom:none" onclick="updatePortraitFromChat();closeChatSettings()">
+                        <i class="fas fa-image"></i> Update Background
+                    </div>
+                    <div style="width:1px;background:#181818;margin:8px 0"></div>
+                    <div class="settings-item" style="flex:1;border-bottom:none" onclick="updateAvatarFromChat();closeChatSettings()">
+                        <i class="fas fa-user-circle"></i> Update Avatar
+                    </div>
+                </div>
+                <div class="settings-item" onclick="toggleChatBgFromMenu(event)" id="menu-bg-item">
+                    <i class="fas fa-image"></i> Portrait as background
+                    <label class="toggle-switch" style="margin-left:auto;pointer-events:none">
+                        <input type="checkbox" id="menu-bg-toggle" style="pointer-events:none">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="settings-item" onclick="toggleNpcMode(event)" id="menu-npc-item">
+                    <i class="fas fa-user-secret"></i> NPC Characters
+                    <label class="toggle-switch" style="margin-left:auto;pointer-events:none">
+                        <input type="checkbox" id="menu-npc-toggle" style="pointer-events:none">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="settings-item" onclick="toggleRealisticEncounter(event)">
+                    <i class="fas fa-star"></i> Realistic Encounter
+                    <label class="toggle-switch" style="margin-left:auto;pointer-events:none">
+                        <input type="checkbox" id="life-events-toggle" id2="schedule-events-toggle" style="pointer-events:none" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div style="padding:12px 20px;border-bottom:1px solid #181818">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                        <i class="fas fa-image" style="width:22px;text-align:center;color:#0084ff;font-size:16px;flex-shrink:0"></i>
+                        <span style="font-size:14px;color:#eee">Image Model</span>
+                        <span id="solo-img-model-label" style="font-size:11px;color:#0084ff;margin-left:auto;font-weight:bold"></span>
+                    </div>
+                    <select id="solo-img-model-picker" onchange="selectImgModel(this.value);syncChatImgModelBtns()" style="width:100%;background:#1a1a1a;border:1px solid #333;color:#eee;border-radius:10px;padding:8px 12px;font-size:14px;outline:none;margin-bottom:8px">
+                        <option value="flux-schnell">🚀 Flux Schnell (Pollinations - Limit: 10 img/h)</option>
+                        <option value="zimage">⚡ Z-Image Turbo (Pollinations - Limit: 4 img/h)</option>
+                    </select>
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+                        <i class="fas fa-palette" style="color:#a855f7;font-size:14px;flex-shrink:0"></i>
+                        <span style="font-size:13px;color:#ccc;flex-shrink:0">Art Style</span>
+                        <select id="chat-img-style-select" onchange="setImgStyleOverride(this.value)" style="flex:1;background:#1a1a1a;border:1px solid #333;color:#eee;border-radius:8px;padding:5px 8px;font-size:13px;outline:none">
+                            <option value="">- Use character default -</option>
+                            <option value="photorealism">📷 Photorealism</option>
+                            <option value="anime">✨ Anime</option>
+                            <option value="semi-realistic">🎨 Semi-Realistic</option>
+                            <option value="manhwa">📖 Manhwa</option>
+                            <option value="artwork">🖌️ Artwork Illustration</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="settings-item danger" onclick="clearChatHistory();closeChatSettings()">
+                    <i class="fas fa-broom"></i> Clear chat history
+                </div>
+                <div id="solo-token-menu-row" style="display:none;align-items:center;gap:13px;padding:12px 20px;border-top:1px solid #181818">
+                    <i class="fas fa-coins" style="width:22px;text-align:center;color:#f59e0b;font-size:17px;flex-shrink:0"></i>
+                    <div style="flex:1">
+                        <div style="font-size:13px;color:#eee">Token Usage</div>
+                        <div id="session-token-badge" style="font-size:11px;color:#888;font-family:monospace;margin-top:2px"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="emo-dot" class="emo-dot" style="display:none"></div>
+        </div>
+    </div>
+
+    <div id="bio-modal" class="bio-modal" onclick="if(!window._bioModalGuard)this.style.display='none'">
+        <div class="bio-content" onclick="event.stopPropagation()" style="position:relative;z-index:2">
+            <div class="bio-sticky-close">
+                <button class="bio-close-btn" onclick="document.getElementById('bio-modal').style.display='none'">✕</button>
+            </div>
+            <div id="p-portrait-wrap">
+                <img id="p-portrait" src="" class="bio-portrait-full" style="display:none;cursor:zoom-in" alt="portrait" onclick="if(this.src)openImgZoom(this.src)">
+                <div id="p-portrait-ph" class="bio-portrait-placeholder"><i class="fas fa-user"></i></div>
+            </div>
+            <div class="bio-drag-handle"></div>
+            <div id="p-status-badge" class="status-badge"></div>
+            
+            <div class="bio-name-center">
+                <h3 id="p-name">Name</h3>
+                <div class="bio-sub" id="p-gen-badge"></div>
+            </div>
+            <div class="bio-body">
+                
+                <div id="dynbio-sync-bar" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:7px 10px;background:linear-gradient(90deg,#0a0a1a,#12122a);border:1px solid #0084ff33;border-radius:10px">
+                    <div style="font-size:10px;color:#0084ff;font-weight:bold;letter-spacing:0.5px">DYNAMIC BIO</div>
+                    <div style="display:flex;gap:6px">
+                        <span id="dynbio-sync-status" style="font-size:10px;color:var(--text-sub);font-style:italic"></span>
+                        <button onclick="fullSyncDynBio()" id="dynbio-full-btn" title="Full sync from chat history (~4000 tokens)" style="background:#0a1a30;border:1px solid #0084ff44;color:#0084ff;border-radius:8px;padding:3px 10px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px"><i class="fas fa-sync-alt"></i> Full Sync</button>
+                    </div>
+                </div>
+                <div style="display:flex;gap:6px;margin-bottom:6px">
+                    <div class="bio-detail-box" style="flex:1;margin-bottom:0" id="p-age-box">
+                        <div class="bio-detail-label">Age </div>
+                        <div class="bio-detail-text" id="p-age">-</div>
+                    </div>
+                    <div class="bio-detail-box" style="flex:2;margin-bottom:0" id="p-rel-box">
+                        <div class="bio-detail-label">Relationship</div>
+                        <div class="bio-detail-text" id="p-rel">-</div>
+                    </div>
+                </div>
+                <div class="bio-detail-box" id="p-career-box" style="margin-bottom:6px;display:none">
+                    <div class="bio-detail-label">💼 Career / Occupation</div>
+                    <div class="bio-detail-text" id="p-career">-</div>
+                </div>
+                
+                <div class="bio-detail-box" id="p-appearance-merged-box">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                        <div class="bio-detail-label" style="margin-bottom:0">Appearance &amp; Body</div>
+                        <button onclick="openBodyMeasModal()" style="background:#1a000e;border:1px solid #f472b622;color:#f472b6;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer">✏️ Edit Measures</button>
+                    </div>
+                    
+                    <div id="p-app-measures">
+                        <div id="body-meas-content"></div>
+                    </div>
+                </div>
+                <div class="bio-detail-box">
+                    <div class="bio-detail-label" id="lbl-bio-bio">Background</div>
+                    <div class="bio-detail-text bio-text-collapsed" id="p-bio" onclick="toggleBioField(this)" title="Tap to expand">...</div>
+                    <span class="bio-expand-hint" id="p-bio-hint" onclick="toggleBioField(document.getElementById('p-bio'))">▼ Show more</span>
+                </div>
+                <div class="bio-detail-box">
+                    <div class="bio-detail-label">🎭 Personality</div>
+                    <div class="bio-detail-text" id="p-personality">-</div>
+                </div>
+                <div class="bio-detail-box" id="p-traits-box" style="display:none">
+                    <div class="bio-detail-label">⚡ Traits</div>
+                    <div id="p-traits-chips" style="display:flex;flex-wrap:wrap;gap:5px;padding-top:2px"></div>
+                </div>
+                <div class="bio-detail-box" id="p-states-box" style="display:none">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+                        <div class="bio-detail-label" style="margin-bottom:0">🏷️ States</div>
+                        <button onclick="openStatePicker()" style="background:#1a0e00;border:1px solid #f59e0b44;color:#f59e0b;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer">+ Edit</button>
+                    </div>
+                    <div id="p-states-chips" style="display:flex;flex-wrap:wrap;gap:5px;padding-top:2px"></div>
+                </div>
+                
+                <div id="repro-health-section" style="display:none">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;margin-top:8px">
+                        <div style="font-size:11px;font-weight:bold;color:#a855f7;text-transform:uppercase;letter-spacing:0.5px">🧬 Reproductive Health</div>
+                        <button class="repro-reload-btn" id="repro-reload-btn" onclick="reloadReproFromHistory()">
+                            <i class="fas fa-sync-alt"></i> Sync from chat
+                        </button>
+                    </div>
+                    <div class="repro-reload-status" id="repro-reload-status"></div>
+                    <div class="repro-panel" id="cycle-panel">
+                        <div class="repro-title">🌙 Menstrual Cycle</div>
+                        <div class="repro-stat-row">
+                            <div class="repro-stat"><span class="rs-val" id="rp-day-in-cycle">-</span><span class="rs-lbl">Cycle Day</span></div>
+                            <div class="repro-stat"><span class="rs-val" id="rp-fertility">-</span><span class="rs-lbl">Fertility</span></div>
+                            <div class="repro-stat"><span class="rs-val" id="rp-next-period">-</span><span class="rs-lbl">Next Period</span></div>
+                        </div>
+                        <div class="repro-phase-bar"><div class="repro-phase-fill" id="rp-phase-fill" style="width:0%;background:#f87171"></div></div>
+                        <div style="font-size:11px;font-weight:bold;color:var(--text-main);text-align:center;margin-top:2px" id="rp-phase-name">-</div>
+                    </div>
+                    <div class="repro-panel" id="pregnancy-panel" style="display:none">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                            <div class="repro-title" style="margin-bottom:0">🤰 Pregnancy</div>
+                            <div style="display:flex;align-items:center;gap:6px">
+                                <span id="fetus-count-badge" style="font-size:11px;background:#1a0028;border:1px solid #a855f744;color:#c084fc;border-radius:10px;padding:3px 10px;font-weight:bold"></span>
+                                <button id="set-week-btn" onclick="promptSetPregnancyWeek()" style="background:#1a0028;border:1px solid #7c3aed88;color:#c084fc;border-radius:8px;padding:3px 9px;font-size:11px;cursor:pointer" title="Manually set pregnancy week/day">✏️ Set Week</button>
+                            </div>
+                        </div>
+                        <div class="preg-week-badge">
+                            <div class="pw-num" id="preg-week-num">0</div>
+                            <div class="pw-info">
+                                <div class="pw-label" id="preg-week-label">Week</div>
+                                <div class="pw-desc" id="preg-week-desc">Early stage</div>
+                                <div id="pw-fetus-info" style="display:none;margin-top:6px;font-size:11px;color:#c084fc;line-height:1.6"></div>
+                            </div>
+                        </div>
+                        <div style="font-size:12px;text-align:center;color:var(--text-sub);margin-bottom:4px" id="preg-status-text">-</div>
+                        <div style="font-size:11px;text-align:center;color:#a855f7;margin-bottom:8px" id="preg-baby-note"></div>
+
+                        <div class="preg-symptom-section" id="solo-preg-symptom-section">
+                            <div class="ps-label">🩺 Symptoms & Body Changes</div>
+                            <div id="preg-symptoms-list"></div>
+                        </div>
+                        
+                        <div id="solo-labor-progress" style="display:none;margin-top:8px;background:linear-gradient(135deg,#1a0005,#3a0010);border:1px solid #ef444466;border-radius:10px;padding:10px 12px">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                                <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:0.6px;color:#ef4444">🚨 Labor Progress</div>
+                                <button onclick="resetLaborToFullTerm()" style="background:#1a0005;border:1px solid #ef444488;color:#fca5a5;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer;font-weight:bold" title="Cancel labor and restore full-term pregnancy">↩️ Reset Labor</button>
+                            </div>
+                            <div id="solo-labor-progress-content" style="font-size:11px;color:#fca5a5;line-height:1.7"></div>
+                        </div>
+                        
+                        <div id="solo-parasite-emergence" style="display:none;margin-top:8px;background:linear-gradient(135deg,#0d1a0d,#1a2e1a);border:1px solid #22c55e44;border-radius:10px;padding:10px 12px">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                                <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:0.6px;color:#22c55e">👽 Parasite Emergence</div>
+                                <button onclick="resetParasiteLabor()" style="background:#0d1a0d;border:1px solid #22c55e88;color:#86efac;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer;font-weight:bold" title="Cancel emergence and restore parasite pregnancy">↩️ Reset Emergence</button>
+                            </div>
+                            <div id="solo-parasite-emergence-content" style="font-size:11px;color:#86efac;line-height:1.7"></div>
+                        </div>
+                    </div>
+                    <div class="repro-panel" id="repro-events-panel">
+                        <div class="repro-title">📋 Event Log</div>
+                        <div class="repro-event-log" id="repro-event-log"><div style="color:var(--text-sub);font-size:11px;font-style:italic">No significant events yet.</div></div>
+                    </div>
+                    
+                </div>
+                
+                <div class="memory-log-section" id="memory-log-section">
+                    <div class="memory-log-header" onclick="toggleMemoryLog()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none">
+                        <div class="memory-log-title">📖 Story Memory</div>
+                        <div style="display:flex;align-items:center;gap:6px">
+                            <button class="memory-log-refresh-btn" onclick="event.stopPropagation();refreshMemoryLogUI()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                            <span id="memory-log-chevron" style="font-size:13px;color:var(--text-sub);transition:transform .25s">▾</span>
+                        </div>
+                    </div>
+                    <div class="memory-log-box" id="memory-log-text" style="display:none"><span class="memory-log-empty">No memory yet - builds after a few exchanges. Use Refresh to generate now.</span></div>
+                </div>
+
+                
+                <div class="kick-counter-section" id="kick-counter-section" style="display:none">
+                    <div class="kick-counter-box">
+                        <div class="kick-counter-header">
+                            <div class="kick-counter-title">👶 Baby Activity</div>
+                            <div class="kick-week-badge" id="kick-week-badge">Week -</div>
+                        </div>
+                        <div class="kick-feed" id="kick-feed">
+                            <div class="kick-empty">No activity detected yet in this conversation.</div>
+                        </div>
+                        <div class="kick-summary-row">
+                            <div>
+                                <span class="kick-summary-count" id="kick-count-today">0</span>
+                                <span class="kick-summary-label"> movements today</span>
+                            </div>
+                            <div class="kick-last" id="kick-last-time"></div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div id="bio-schedule-section" style="margin-top:10px">
+                    <div onclick="toggleScheduleView()" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:6px;cursor:pointer;user-select:none">
+                        <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
+                            <div style="font-size:11px;font-weight:bold;color:#f59e0b;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;flex-shrink:0">⏰ Daily Schedule</div>
+                            <span id="sched-variant-badge" style="display:none;flex-shrink:0"></span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:5px;flex-shrink:0" onclick="event.stopPropagation()">
+                            <button onclick="generateScheduleAI()" id="sched-ai-btn" style="background:#1a0b2e;border:1px solid #7c3aed44;color:#b259ff;border-radius:8px;padding:3px 10px;font-size:11px;cursor:pointer">✨ AI</button>
+                            <button onclick="toggleScheduleEdit()" id="sched-edit-btn" style="background:#1a0e00;border:1px solid #f59e0b44;color:#f59e0b;border-radius:8px;padding:3px 10px;font-size:11px;cursor:pointer">✏️ Edit</button>
+                            <span id="sched-chevron" style="font-size:13px;color:var(--text-sub);transition:transform .25s;margin-left:2px">▾</span>
+                        </div>
+                    </div>
+                    
+                    <div id="sched-view-mode" style="background:var(--input-bg);border:1px solid #f59e0b22;border-radius:10px;padding:10px;font-size:12px;color:var(--text-sub)">
+                        <span id="sched-view-text">No schedule set.</span>
+                    </div>
+                    
+                    <div id="sched-edit-mode" style="display:none;background:var(--input-bg);border:1px solid #f59e0b44;border-radius:10px;padding:12px">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+                            <div>
+                                <label style="font-size:10px;color:#f59e0b;font-weight:bold;display:block;margin-bottom:2px">🌅 Wake up</label>
+                                <input type="time" id="bp-wake" class="form-control" style="padding:6px 8px;font-size:12px">
+                            </div>
+                            <div>
+                                <label style="font-size:10px;color:#f59e0b;font-weight:bold;display:block;margin-bottom:2px">🍳 Breakfast</label>
+                                <input type="time" id="bp-breakfast" class="form-control" style="padding:6px 8px;font-size:12px">
+                            </div>
+                            <div>
+                                <label style="font-size:10px;color:#f59e0b;font-weight:bold;display:block;margin-bottom:2px">�- Lunch</label>
+                                <input type="time" id="bp-lunch" class="form-control" style="padding:6px 8px;font-size:12px">
+                            </div>
+                            <div>
+                                <label style="font-size:10px;color:#f59e0b;font-weight:bold;display:block;margin-bottom:2px">🍽️ Dinner</label>
+                                <input type="time" id="bp-dinner" class="form-control" style="padding:6px 8px;font-size:12px">
+                            </div>
+                            <div>
+                                <label style="font-size:10px;color:#f59e0b;font-weight:bold;display:block;margin-bottom:2px">🌙 Bedtime</label>
+                                <input type="time" id="bp-sleep" class="form-control" style="padding:6px 8px;font-size:12px">
+                            </div>
+                            <div>
+                                <label style="font-size:10px;color:#f59e0b;font-weight:bold;display:block;margin-bottom:2px">☀️ Story time now</label>
+                                <input type="time" id="bp-curtime" class="form-control" style="padding:6px 8px;font-size:12px">
+                            </div>
+                        </div>
+                        <div style="margin-bottom:10px">
+                            <label style="font-size:10px;color:#f59e0b;font-weight:bold;display:block;margin-bottom:2px">🎨 Free time activities <span style="color:var(--text-sub);font-weight:normal">(unscheduled periods)</span></label>
+                            <input type="text" id="bp-activities" class="form-control" style="font-size:12px" placeholder="reading, drawing, cooking, music...">
+                        </div>
+                        
+                        <div style="margin-bottom:10px">
+                            <label style="font-size:10px;color:#f59e0b;font-weight:bold;display:block;margin-bottom:6px">📌 Custom Scheduled Activities <span style="color:var(--text-sub);font-weight:normal">(with time range)</span></label>
+                            <div id="bp-custom-acts-list"></div>
+                            <button class="custom-act-add" onclick="addCustomActRow()">+ Add activity</button>
+                        </div>
+                        <div style="display:flex;gap:8px">
+                            <button onclick="saveScheduleFromBio()" style="flex:1;background:#f59e0b;color:#000;border:none;border-radius:10px;padding:9px;font-size:13px;font-weight:bold;cursor:pointer">💾 Save</button>
+                            <button onclick="toggleScheduleEdit()" style="flex:1;background:var(--bg-main);color:var(--text-sub);border:1px solid var(--border);border-radius:10px;padding:9px;font-size:13px;cursor:pointer">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bio-detail-box" style="margin-top:8px">
+                    <div class="bio-detail-label" style="color:#9333ea">✏️ Edit Portrait</div>
+                    <div style="display:flex;gap:8px;align-items:flex-end;margin-top:6px">
+                        <textarea id="bio-portrait-edit-prompt" class="form-control" placeholder="Ex: Add sunset lighting, change outfit, glasses..." style="min-height:52px;font-size:12px;flex:1;resize:none" oninput="autoResize(this)"></textarea>
+                        <button onclick="bioEditAndSavePortrait()" style="background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:13px;cursor:pointer;flex-shrink:0;white-space:nowrap" title="Regenerate & Save as background"><i class="fas fa-sync-alt"></i><br><span style="font-size:10px">Save</span></button>
+                    </div>
+                    <div id="bio-portrait-status" style="font-size:11px;color:var(--text-sub);margin-top:4px;display:none"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="emo-badge" class="emo-badge"></div>
+    <button id="scroll-top-btn" onclick="scrollToTop_chat()" title="Scroll to first message"><i class="fas fa-chevron-up"></i></button>
+    <button id="scroll-bottom-btn" onclick="scrollToBottom()" title="Scroll to latest"><i class="fas fa-chevron-down"></i></button>
+    <div id="chat-container"></div>
+    <div id="typing" class="typing-indicator" style="display:none">
+        <img id="typing-av" class="typing-av" src="" alt="" onerror="this.src='https://ui-avatars.com/api/?name=Bot&background=555&color=fff'">
+        <div class="typing-bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>
+    </div>
+
+    
+    <div style="position:relative">
+        <div id="birth-btn-wrap">
+            <button id="birth-btn" onclick="triggerBirth()">
+                🚨 <span id="birth-btn-label">Deliver Baby</span>
+            </button>
+        </div>
+    <div class="chat-foot">
+        <button class="hint-btn" onclick="openPersonaQuickPanel()" title="My Persona" style="color:#b259ff;margin-right:2px"><i class="fas fa-user-circle"></i></button>
+        <textarea id="msg-input" rows="1" placeholder="Type a message..." oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+        <button class="btn-thought-usr" onclick="insertThought()" title="Inner thought" style="margin-left:2px">()</button>
+        <button class="btn-action-star" onmousedown="insertActionStar();event.preventDefault()" ontouchstart="insertActionStar();event.preventDefault()" title="Action">**</button>
+        <button class="hint-btn" onclick="sendMsg()" title="Send" style="color:#0084ff;display:none"><i class="fas fa-paper-plane"></i></button>
+        <button class="hint-btn" onclick="showHints()" title="Hint"><i class="fas fa-lightbulb"></i></button>
+    </div>
+    </div>
+
+    
+    <div id="hint-overlay" class="hint-overlay" onclick="this.style.display='none'">
+        <div class="hint-panel" onclick="event.stopPropagation()">
+            <div class="hint-title">
+                <span>💡 Next suggestions</span>
+                <button onclick="document.getElementById('hint-overlay').style.display='none'" style="background:none;border:none;color:var(--text-sub);cursor:pointer;font-size:16px">✕</button>
+            </div>
+            <div id="hint-content"><div class="hint-loading"><i class="fas fa-spinner fa-spin"></i> Generating suggestions...</div></div>
+        </div>
+    </div>
+
+    
+    <div id="persona-quick-overlay" class="hint-overlay" onclick="this.style.display='none'" style="display:none">
+        <div class="hint-panel" onclick="event.stopPropagation()" style="border:1px solid #3b156b;background:var(--bg-panel)">
+            <div class="hint-title" style="color:#b259ff">
+                <span>💜 My Persona</span>
+                <div style="display:flex;gap:8px;align-items:center">
+                    <button onclick="openScreen('sc-create-persona');document.getElementById('persona-quick-overlay').style.display='none'" style="background:#b259ff22;border:1px solid #b259ff55;color:#b259ff;border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;font-weight:bold"><i class="fas fa-edit"></i> Edit</button>
+                    <button onclick="document.getElementById('persona-quick-overlay').style.display='none'" style="background:none;border:none;color:var(--text-sub);cursor:pointer;font-size:16px">✕</button>
+                </div>
+            </div>
+            <div id="persona-quick-content" style="font-size:13px;color:var(--text-main);line-height:1.7">
+                <div style="color:var(--text-sub);font-style:italic;text-align:center;padding:10px">No persona active for this chatbot.</div>
+            </div>
+        </div>
+    </div>
+
+    
+<div id="body-meas-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:400;justify-content:flex-end;align-items:flex-end;padding:0">
+    <div style="background:var(--bg-panel);border-radius:20px 20px 0 0;width:100%;max-width:480px;margin:0 auto;padding:18px 16px 30px;border:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:bold;color:#f472b6;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+            📐 Base Body Measurements
+            <button onclick="closeBodyMeasModal()" style="background:none;border:none;color:var(--text-sub);font-size:20px;cursor:pointer;line-height:1">�-</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+            <div>
+                <div style="font-size:10px;color:var(--text-sub);margin-bottom:4px">👙 Bust (cm)</div>
+                <input id="bm-bust" type="number" style="width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text-main);padding:8px;border-radius:8px;font-size:14px" placeholder="88">
+            </div>
+            <div>
+                <div style="font-size:10px;color:var(--text-sub);margin-bottom:4px">〰 Waist (cm)</div>
+                <input id="bm-waist" type="number" style="width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text-main);padding:8px;border-radius:8px;font-size:14px" placeholder="63">
+            </div>
+            <div>
+                <div style="font-size:10px;color:var(--text-sub);margin-bottom:4px">🍑 Hips (cm)</div>
+                <input id="bm-hips" type="number" style="width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text-main);padding:8px;border-radius:8px;font-size:14px" placeholder="90">
+            </div>
+            <div>
+                <div style="font-size:10px;color:var(--text-sub);margin-bottom:4px">📏 Height (cm)</div>
+                <input id="bm-height" type="number" style="width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text-main);padding:8px;border-radius:8px;font-size:14px" placeholder="165">
+            </div>
+            <div>
+                <div style="font-size:10px;color:var(--text-sub);margin-bottom:4px">⚖️ Base Weight (kg)</div>
+                <input id="bm-weight" type="number" step="0.1" style="width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text-main);padding:8px;border-radius:8px;font-size:14px" placeholder="53">
+            </div>
+            <div>
+                <div style="font-size:10px;color:var(--text-sub);margin-bottom:4px">🎀 Base Bra Cup</div>
+                <select id="bm-bra" style="width:100%;background:var(--input-bg);border:1px solid var(--border);color:var(--text-main);padding:8px;border-radius:8px;font-size:14px">
+                    <option value="AA">AA</option>
+                    <option value="A">A</option>
+                    <option value="B" selected>B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                    <option value="DD">DD</option>
+                    <option value="E">E</option>
+                    <option value="F">F</option>
+                    <option value="G">G</option>
+                    <option value="H">H</option>
+                    <option value="I">I</option>
+                    <option value="J">J</option>
+                </select>
+            </div>
+        </div>
+        <div style="font-size:10px;color:var(--text-sub);font-style:italic;margin-bottom:12px">These are BASE measurements. The app will auto-adjust for pregnancy, cycle phase, and postpartum.</div>
+        <button onclick="aiExtractBodyMeasurements()" id="bm-ai-btn" style="width:100%;background:linear-gradient(135deg,#1a0b2e,#0a1a30);border:1px solid #7c3aed;color:#c084fc;padding:10px;border-radius:10px;font-size:13px;font-weight:bold;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px"><i class="fas fa-robot"></i> AI Fill from Appearance</button>
+        <div id="bm-ai-status" style="font-size:11px;text-align:center;margin-bottom:8px;display:none"></div>
+        <button onclick="syncMeasurementsFromAppearance()" style="width:100%;background:#0a1a30;border:1px solid #0084ff55;color:#60a5fa;padding:10px;border-radius:10px;font-size:13px;font-weight:bold;cursor:pointer;margin-bottom:8px">🔄 Sync from Appearance Text</button>
+        <button onclick="saveBodyMeasurements()" style="width:100%;background:#f472b6;color:#fff;border:none;padding:12px;border-radius:10px;font-size:15px;font-weight:bold;cursor:pointer">💾 Save</button>
+    </div>
+</div>
+    </div>
+</div>
+
+<div id="thought-overlay" class="thought-overlay" onclick="this.style.display='none'">
+    <div class="thought-panel" onclick="event.stopPropagation()">
+        <div class="thought-header">
+            <span>💭 Inner Thoughts</span>
+            <button onclick="document.getElementById('thought-overlay').style.display='none'" style="background:none;border:none;color:var(--text-sub);cursor:pointer;font-size:16px">✕</button>
+        </div>
+        <div class="thought-name" id="thought-char-name"></div>
+        <div id="thought-content"><div class="thought-loading"><i class="fas fa-spinner fa-spin"></i> Reading inner thoughts...</div></div>
+    </div>
+</div>
+
+<div id="model-picker" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9000;align-items:flex-end;justify-content:center" onclick="this.style.display='none'">
+    <div style="background:var(--bg-panel);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:20px 16px 36px;border:1px solid var(--border)" onclick="event.stopPropagation()">
+        <div style="font-size:13px;font-weight:bold;color:var(--text-sub);margin-bottom:14px;text-align:center;text-transform:uppercase;letter-spacing:0.5px">🤖 Select Chat Model</div>
+        <div id="model-picker-list"></div>
+    </div>
+</div>
+
+<div id="sc-create" class="screen">
+    <div class="sub-hdr" style="gap:10px">
+        <button class="c-back" onclick="closeScreen('sc-create')" title="Back"><i class="fas fa-chevron-left"></i></button>
+        <div id="create-toggle-strip" style="display:flex;flex:1;gap:8px;position:relative;z-index:50;">
+            <button id="ctog-real"
+                style="flex:1;padding:8px 0;border:1.5px solid #0084ff;border-radius:12px;font-size:14px;font-weight:bold;cursor:pointer;background:#0d2a4a;color:#60b3ff;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;user-select:none;-webkit-appearance:none;appearance:none;"
+                onclick="graceSetMode('realistic')"
+                ontouchend="graceSetMode('realistic');event.preventDefault();">🎭 Realistic</button>
+            <button id="ctog-anime"
+                style="flex:1;padding:8px 0;border:1.5px solid #222;border-radius:12px;font-size:14px;font-weight:bold;cursor:pointer;background:#111;color:#555;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;user-select:none;-webkit-appearance:none;appearance:none;"
+                onclick="graceSetMode('anime')"
+                ontouchend="graceSetMode('anime');event.preventDefault();">🎮 Fiction</button>
+        </div>
+    </div>
+
+    
+    <div id="anime-panel" style="display:none;background:#08000f;border-bottom:1px solid #2d0060;padding:10px 16px;flex-shrink:0;">
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <input id="ai-char" style="flex:1;min-width:0;background:#0d0020;border:1px solid #3b156b;color:#e9d5ff;border-radius:10px;padding:9px 12px;font-size:13px;box-sizing:border-box;outline:none;" placeholder="Character name..." autocomplete="off">
+            <input id="ai-series" style="flex:1;min-width:0;background:#0d0020;border:1px solid #3b156b;color:#e9d5ff;border-radius:10px;padding:9px 12px;font-size:13px;box-sizing:border-box;outline:none;" placeholder="Series / Game / Movie..." autocomplete="off">
+        </div>
+        <button id="anime-go-btn"
+            style="width:100%;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:bold;cursor:pointer;touch-action:manipulation;-webkit-appearance:none;appearance:none;"
+            onclick="doAnimeSearch()">
+            <i class="fas fa-robot"></i> Search &amp; Fill All Fields
+        </button>
+        <div id="anime-status" style="font-size:13px;text-align:center;min-height:16px;color:#a855f7;margin-top:6px;"></div>
+
+        <!-- Anime search result preview - stays separate from the main form -->
+        <div id="anime-preview-box" style="display:none;margin-top:10px;background:#0d0020;border:1px solid #3b156b;border-radius:12px;padding:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                <div style="font-size:12px;font-weight:bold;color:#a855f7">✅ Found - review before applying</div>
+                <button onclick="applyAnimeToForm()" style="background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;border-radius:10px;padding:7px 16px;font-size:13px;font-weight:bold;cursor:pointer">⬇ Apply to Form</button>
+            </div>
+            <div id="anime-preview-content" style="font-size:12px;color:#e9d5ff;line-height:1.8"></div>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <!-- Randomize All button for quick testing -->
+        <div id="randomize-fields-wrap" style="display:flex;gap:8px;margin-bottom:12px">
+            <button onclick="randomizeAllFields()" style="flex:1;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+                🎲 Randomize All Fields
+            </button>
+        </div>
+
+        <!-- Error log removed - errors now redirect to debug console (🐛 bug icon) -->
+
+        
+        <div id="sync-log">
+            <div class="sync-header">
+                <span>🔄 Sync Log</span>
+                <button onclick="document.getElementById('sync-log').style.display='none'" style="background:none;border:none;color:#8b5cf6;cursor:pointer;font-size:12px">✕ Close</button>
+            </div>
+            <div id="sync-entries"></div>
+        </div>
+
+
+        <!-- Character Name + Big Avatar in same row -->
+        <div class="form-group" style="margin-bottom:8px">
+            <label id="lbl-avatar">Character Name <span style="color:#ef4444">*</span></label>
+            <div style="display:flex;gap:10px;align-items:center">
+                <div class="field-row" style="flex:1;min-width:0">
+                    <input type="text" id="bot-name" class="form-control" placeholder="Name">
+                    <button class="dice-btn" onclick="rollName(this)" title="Random name based on Year + Country">&#x1F3B2;</button>
+                </div>
+                <!-- Big Avatar holder -->
+                <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:0">
+                    <img id="av-preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Ccircle cx='45' cy='45' r='45' fill='%23111111'/%3E%3C/svg%3E" class="p-av-preview" style="background:#111;width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid var(--border);cursor:pointer" onclick="document.getElementById('av-upload-input').click()" title="Avatar preview">
+                    <input type="hidden" id="bot-av-url">
+                </div>
+            </div>
+        </div>
+
+        <!-- Year/Era + Age + Gen Avatar button in same row -->
+        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-end">
+            <div class="form-group" style="flex:1;margin-bottom:0">
+                <label>Year / Era</label>
+                <input type="text" id="bot-year" class="form-control" placeholder="Ex: 1850, 2087, 1920s...">
+            </div>
+            <div class="form-group" style="flex:1;margin-bottom:0">
+                <label>Age <span style="color:#ef4444">*</span></label>
+                <div style="display:flex;gap:6px;align-items:center">
+                    <input type="number" id="bot-age" class="form-control" placeholder="Age" min="1" max="999" style="flex:1;min-width:0">
+                    <button class="av-btn-draw" id="btn-draw" onclick="drawAvatar()" style="flex-shrink:0;font-size:12px;padding:8px 10px;border-radius:10px;white-space:nowrap;height:38px;display:flex;align-items:center;gap:4px"><i class="fas fa-wand-magic-sparkles"></i><span id="lbl-draw-btn">Gen</span></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Career / Occupation + Country/Setting -->
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+            <div class="form-group" style="flex:1;margin-bottom:0">
+                <label>Career / Occupation</label>
+                <div class="field-row">
+                    <input type="text" id="bot-career" class="form-control" placeholder="Ex: Doctor, Assassin, CEO...">
+                    <button class="dice-btn" onclick="rollBotCareer(this)" title="Random career">🎲</button>
+                </div>
+            </div>
+            <div class="form-group" style="flex:1;margin-bottom:0">
+                <label>Country / Setting <span style="color:#ef4444">*</span></label>
+                <input type="text" id="bot-country" class="form-control" placeholder="Ex: Japan, Morocco, Space...">
+            </div>
+        </div>
+
+        <!-- Gender + Relationship -->
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+            <div class="form-group" style="flex:0 0 140px;margin-bottom:0">
+                <label id="lbl-gender">Gender</label>
+                <select id="bot-gender" class="form-control" title="Select gender">
+                    <option value="Male" id="opt-male">Male</option>
+                    <option value="Female" id="opt-female" selected>Female</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex:1;margin-bottom:0">
+                <label>Social Relation <span style="font-size:10px;color:#888">(static)</span></label>
+                <input type="text" id="bot-social-relation" class="form-control" placeholder="Ex: colleague, teacher, mentor...">
+            </div>
+            <div class="form-group" style="flex:1;margin-bottom:0">
+                <label>Family Relation <span style="font-size:10px;color:#888">(static)</span></label>
+                <input type="text" id="bot-family-relation" class="form-control" placeholder="Ex: sister, mother, cousin...">
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:12px">
+            <label>Emotional Relation <span style="font-size:10px;color:#888">(dynamic - changes as chat progresses)</span></label>
+            <select id="bot-emotional-relation" class="form-control" title="Select emotional relation">
+                <option value="">- Select -</option>
+                <option value="enemy">Enemy</option>
+                <option value="rival">Rival</option>
+                <option value="stranger">Stranger</option>
+                <option value="neutral">Neutral</option>
+                <option value="friend">Friend</option>
+                <option value="close friend">Close Friend</option>
+                <option value="crush">Crush</option>
+                <option value="lover">Lover</option>
+                <option value="soulmate">Soulmate</option>
+            </select>
+            <div style="font-size:10px;color:var(--text-sub);margin-top:4px">💡 This relationship can evolve during chat based on conversation. Social and family relations stay fixed.</div>
+        </div>
+
+        <div class="form-group" style="display:none"></div>
+
+        
+        <div class="form-group">
+            <label id="lbl-app">Appearance <span style="color:#ef4444">*</span></label>
+            <div id="app-tags-wrap" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:20px"></div>
+            <div style="display:flex;gap:6px;align-items:center">
+                <input id="app-tag-input" class="form-control" style="flex:1;padding:9px 12px;font-size:13px;border-radius:10px" placeholder='e.g. 170cm, blue eyes, white hair...' onkeydown="handleAppTagKey(event)" autocomplete="off">
+                <button onclick="addAppTag()" style="background:#0084ff22;border:1px solid #0084ff55;color:#0084ff;border-radius:10px;padding:9px 12px;font-size:13px;cursor:pointer;white-space:nowrap;font-weight:bold">+ Add</button>
+                <button class="dice-btn" onclick="rollAppearance(this)" title="Random appearance">🎲</button>
+            </div>
+            <div style="font-size:10px;color:#555;margin-top:5px">Press <kbd style="background:#222;border:1px solid #444;border-radius:3px;padding:1px 4px;font-size:10px">Enter</kbd> or comma to add. Click tag to remove.</div>
+            <textarea id="bot-app" style="display:none"></textarea>
+        </div>
+
+        
+        <div class="form-group">
+            <label id="lbl-bio">Background (Bio)</label>
+            <div class="field-row" style="align-items:flex-start">
+                <textarea id="bot-bio" class="form-control" oninput="autoResize(this)" placeholder="Ex: A former detective who left the force after a controversial case..." style="min-height:36px;max-height:90px"></textarea>
+                <button class="dice-btn" onclick="rollBio(this)" title="Random bio" style="margin-top:2px">🎲</button>
+            </div>
+        </div>
+
+        
+        <div class="form-group">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <label id="lbl-prompt" style="margin-bottom:0">Personality & Traits <span style="color:#ef4444">*</span></label>
+                <button type="button" onclick="openTraitPicker()" ontouchend="openTraitPicker();event.preventDefault()" style="position:relative;z-index:1000;background:#0084ff22;border:1px solid #0084ff55;color:#0084ff;border-radius:10px;padding:5px 12px;font-size:13px;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:5px;touch-action:manipulation;-webkit-tap-highlight-color:transparent"><i class="fas fa-plus"></i> Add Trait</button>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+                <span style="font-size:10px;color:#60a5fa;background:#0a1a30;border:1px solid #0084ff44;border-radius:8px;padding:2px 8px">🎭 Personality = character traits</span>
+                <span style="font-size:10px;color:#a78bfa;background:#1a0b2e;border:1px solid #7c3aed44;border-radius:8px;padding:2px 8px">🧬 Genetic = body parameters</span>
+                <span id="trait-count-badge" style="font-size:10px;color:#888;margin-left:auto"></span>
+            </div>
+            <div id="selected-traits-wrap" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;min-height:20px"></div>
+            <textarea id="bot-prompt" class="form-control" oninput="autoResize(this)" placeholder="Extra description... (e.g. Speaks softly, often smiles...)" style="min-height:50px"></textarea>
+        </div>
+
+        
+        <div class="form-group">
+            <label style="color:var(--text-sub);font-size:13px;font-weight:bold"><span id="lbl-context">Meeting Context</span> <span id="lbl-context-hint" style="color:#888;font-size:11px">(optional)</span></label>
+            <div class="field-row" style="align-items:flex-start">
+                <textarea id="bot-context" class="form-control" oninput="autoResize(this)" placeholder="Ex: You encounter the character at a small café on a rainy afternoon. The air is quiet, warm yellow lights..." style="min-height:36px;max-height:90px"></textarea>
+                <button class="dice-btn" onclick="rollContext(this)" title="Random meeting context" style="margin-top:2px">🎲</button>
+            </div>
+        </div>
+
+        
+        <div class="form-group">
+            <label style="color:#b259ff;font-size:13px;font-weight:bold">💜 My Persona <span style="color:#888;font-size:11px">(optional - helps AI respond as if it knows you)</span></label>
+            <select id="bot-persona-id" class="form-control" style="border-color:#3b156b" title="Select persona">
+                <option value="">- None (no persona) -</option>
+            </select>
+            <div id="bot-persona-preview" style="font-size:11px;color:var(--text-sub);margin-top:5px;display:none;background:var(--input-bg);border-radius:8px;padding:6px 8px;border:1px solid #3b156b22"></div>
+        </div>
+
+        
+        <div class="form-group">
+            <label style="color:var(--text-sub);font-size:13px;font-weight:bold" id="lbl-img-style">🎨 Image Style</label>
+            <select id="bot-img-style" class="form-control" title="Select image style">
+                <option value="anime">Anime</option>
+                <option value="semi-realistic">Semi-Realistic</option>
+                <option value="photorealism" selected>Photorealism</option>
+                <option value="manhwa">Manhwa</option>
+                <option value="artwork">Artwork Illustration</option>
+                <option value="erotic">Erotic Illustration</option>
+            </select>
+        </div>
+
+        
+        <div class="portrait-box">
+            <div style="font-size:13px;font-weight:bold;color:var(--text-sub);margin-bottom:8px" id="lbl-portrait-title">🖼️ Chat Background</div>
+            <div style="font-size:11px;color:var(--text-sub);margin-bottom:10px" id="lbl-portrait-hint">Fill in: Gender + Name + Appearance first</div>
+            <div style="display:flex;gap:8px;margin-bottom:10px">
+                <div style="flex:1">
+                    <label style="font-size:11px;color:var(--text-sub);font-weight:bold;display:block;margin-bottom:4px">📐 Ratio</label>
+                    <select id="portrait-ratio" class="form-control" style="padding:8px;font-size:13px" title="Select ratio">
+                        <option value="9:16">9:16 (Portrait)</option>
+                        <option value="1:1">1:1 (Square)</option>
+                        <option value="16:9">16:9 (Landscape)</option>
+                        <option value="3:4">3:4 (Classic)</option>
+                        <option value="2:3">2:3 (Photo)</option>
+                    </select>
+                </div>
+                <div style="flex:1">
+                    <label style="font-size:11px;color:var(--text-sub);font-weight:bold;display:block;margin-bottom:4px">🧍 Pose</label>
+                    <select id="portrait-pose" class="form-control" style="padding:8px;font-size:13px" title="Select pose">
+                        <option value="auto">✨ Auto (from personality)</option>
+                        <option value="portrait">Face close-up</option>
+                        <option value="half">Half body</option>
+                        <option value="fullbody">Full body</option>
+                        <option value="sitting">Sitting / relaxed</option>
+                        <option value="action">Dynamic action pose</option>
+                        <option value="side">Side profile</option>
+                        <option value="back">From behind</option>
+                        <option value="lying">Lying down</option>
+                        <option value="sexy">🔥 Sexy / Alluring</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-portrait" id="btn-gen-portrait" onclick="generatePortrait()">
+                <i class="fas fa-image"></i> <span id="lbl-portrait-btn">Generate Chat Background</span>
+            </button>
+            <div id="portrait-loading" style="display:none;text-align:center;color:var(--text-sub);font-size:13px;padding:10px">
+                <i class="fas fa-spinner fa-spin"></i> <span id="lbl-portrait-drawing">Drawing background...</span>
+            </div>
+            <img id="portrait-preview" class="portrait-preview-img" style="display:none" alt="character portrait">
+            <div id="portrait-edit-section" style="display:none;margin-top:10px">
+                <div style="font-size:12px;color:var(--text-sub);margin-bottom:6px">✏️ Edit portrait (enter request then click Regenerate)</div>
+                <div style="display:flex;gap:8px;align-items:flex-start">
+                    <textarea id="portrait-edit-prompt" class="form-control" placeholder="Ex: Add sunset lighting, change outfit, glasses..." style="min-height:60px;font-size:13px;flex:1" oninput="autoResize(this)"></textarea>
+                    <button id="btn-regen-portrait" onclick="regeneratePortraitWithEdit()" style="background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0"><i class="fas fa-sync-alt"></i><br>Regenerate</button>
+                </div>
+            </div>
+            <input type="hidden" id="bot-portrait-url">
+            <div class="toggle-row" style="margin-top:8px">
+                <span style="font-size:13px;color:var(--text-main)" id="lbl-use-bg">Use as chat background</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="bot-use-bg" title="Use as chat background">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="saveBot()" id="btn-save-char"><span id="lbl-save-char">Save Character</span></button>
+    </div>
+</div>
+
+<div id="sc-create-persona" class="screen">
+    <div class="sub-hdr">
+        <button class="c-back" onclick="closeScreen('sc-create-persona')" title="Back"><i class="fas fa-chevron-left"></i></button>
+        <b>Create My Persona</b>
+        <div style="width:20px"></div>
+    </div>
+    <div class="form-container">
+        <div style="background:#1a0b2e;border:1px solid #3b156b;border-radius:12px;padding:12px;margin-bottom:16px;font-size:12px;color:#b259ff;line-height:1.5">
+            💜 <b>Persona</b> is your virtual self in roleplay. This info is sent alongside each chat so the AI responds more authentically to you.
+        </div>
+
+        <button class="btn-ai" id="btn-persona-ai-gen" onclick="autoGeneratePersona()">
+            <i class="fas fa-wand-magic-sparkles"></i> Auto Generate with AI
+        </button>
+
+        
+        <div style="display:flex;gap:8px">
+            <div class="form-group" style="flex:1">
+                <label>Age</label>
+                <input type="number" id="persona-age" class="form-control" placeholder="Ex: 22" min="1" max="999">
+            </div>
+            <div class="form-group" style="flex:1">
+                <label>Gender</label>
+                <select id="persona-gender" class="form-control" title="Select gender">
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Non-binary">Non-binary</option>
+                </select>
+            </div>
+        </div>
+
+        
+        <div style="display:flex;gap:8px">
+            <div class="form-group" style="flex:1;margin-bottom:0">
+                <label>Year / Era</label>
+                <input type="text" id="persona-year" class="form-control" placeholder="Ex: 2025, 1890s...">
+            </div>
+            <div class="form-group" style="flex:1;margin-bottom:0">
+                <label>Country / Origin</label>
+                <input type="text" id="persona-country" class="form-control" placeholder="Ex: Japan, USA...">
+            </div>
+        </div>
+
+        
+        <div class="form-group" style="margin-top:15px">
+            <label>Career / Occupation</label>
+            <div class="field-row">
+                <input type="text" id="persona-career" class="form-control" placeholder="Ex: Engineer, Soldier, Artist, Entrepreneur...">
+                <button class="dice-btn" onclick="rollPersonaCareer(this)" title="Random career">🎲</button>
+            </div>
+        </div>
+
+        
+        <div class="form-group">
+            <label>Your Name / Alias</label>
+            <div class="field-row">
+                <input type="text" id="persona-name" class="form-control" placeholder="Ex: Alex, Kai...">
+                <button class="dice-btn" onclick="rollPersonaName(this)" title="Random name">🎲</button>
+            </div>
+        </div>
+
+        
+        <div class="form-group">
+            <label>Appearance</label>
+            <div class="field-row" style="align-items:flex-start">
+                <textarea id="persona-app" class="form-control" oninput="autoResize(this)" placeholder="Ex: Tall, dark hair, green eyes, usually in casual clothes..."></textarea>
+                <button class="dice-btn" onclick="rollPersonaField('persona-app','appearance',this)" title="Random" style="margin-top:2px">🎲</button>
+            </div>
+        </div>
+
+        
+        <div class="form-group">
+            <label>Background (Bio)</label>
+            <div class="field-row" style="align-items:flex-start">
+                <textarea id="persona-bio" class="form-control" oninput="autoResize(this)" placeholder="Ex: A college student studying literature, grew up in a small town..."></textarea>
+                <button class="dice-btn" onclick="rollPersonaField('persona-bio','background',this)" title="Random" style="margin-top:2px">🎲</button>
+            </div>
+        </div>
+
+        
+        <div class="form-group">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <label style="margin-bottom:0">Personality &amp; Traits</label>
+                <button type="button" onclick="openPersonaTraitPicker()" ontouchend="openPersonaTraitPicker();event.preventDefault()" style="position:relative;z-index:1000;background:#b259ff22;border:1px solid #b259ff55;color:#b259ff;border-radius:10px;padding:5px 12px;font-size:13px;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:5px;touch-action:manipulation;-webkit-tap-highlight-color:transparent"><i class="fas fa-plus"></i> Add Trait</button>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+                <span style="font-size:10px;color:#60a5fa;background:#0a1a30;border:1px solid #0084ff44;border-radius:8px;padding:2px 8px">🎭 Personality = character traits</span>
+                <span style="font-size:10px;color:#a78bfa;background:#1a0b2e;border:1px solid #7c3aed44;border-radius:8px;padding:2px 8px">🧬 Genetic = body parameters</span>
+            </div>
+            <div id="persona-traits-wrap" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;min-height:20px"></div>
+            <textarea id="persona-prompt" class="form-control" oninput="autoResize(this)" placeholder="Extra notes... (e.g. Speaks confidently, keeps things brief...)" style="min-height:50px"></textarea>
+        </div>
+
+        
+        <div id="persona-trait-picker-overlay" class="trait-picker-overlay" onclick="closePersonaTraitPicker()" style="display:none;pointer-events:none">
+            <div class="trait-picker-panel" onclick="event.stopPropagation()">
+                <div class="trait-picker-hdr">
+                    <div style="font-size:14px;font-weight:bold;margin-bottom:8px;color:#b259ff">💜 My Traits</div>
+                    <input type="text" id="persona-trait-search" class="trait-picker-search" placeholder="Search traits..." oninput="renderPersonaTraitList()">
+                    <div class="trait-picker-tabs" style="margin-top:10px">
+                        <button class="trait-picker-tab active" data-ptab="all" onclick="switchPersonaTab('all')">All</button>
+                        <button class="trait-picker-tab" data-ptab="personality" onclick="switchPersonaTab('personality')">🎭 Personality</button>
+                        <button class="trait-picker-tab" data-ptab="genetic" onclick="switchPersonaTab('genetic')">🧬 Genetic</button>
+                    </div>
+                </div>
+                <div class="trait-picker-body" id="persona-trait-list"></div>
+                <div class="trait-picker-footer">
+                    <button onclick="closePersonaTraitPicker()" style="width:100%;background:#b259ff;color:#fff;border:none;border-radius:12px;padding:12px;font-size:15px;font-weight:bold;cursor:pointer">Done</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="persona-list-section" style="margin-top:6px;margin-bottom:16px">
+            <div style="font-size:13px;font-weight:bold;color:var(--text-sub);margin-bottom:8px">My Saved Personas:</div>
+            <div id="persona-saved-list"></div>
+        </div>
+
+        <button class="btn-primary" onclick="savePersona()">Save Persona</button>
+    </div>
+</div>
+
+<div id="sc-settings" class="screen">
+    <div class="sub-hdr">
+        <button class="c-back" onclick="closeScreen('sc-settings')" title="Back"><i class="fas fa-chevron-left"></i></button>
+        <b id="lbl-settings-title">Settings</b>
+        <div style="width:20px"></div>
+    </div>
+    <div class="form-container">
+
+        
+        <details style="margin-bottom:16px;background:var(--input-bg);border:1px solid #7c3aed44;border-radius:14px;overflow:hidden">
+            <summary style="padding:13px 16px;cursor:pointer;font-size:14px;font-weight:bold;color:#b259ff;display:flex;align-items:center;gap:8px;list-style:none">
+                <span>📖</span> New User Guide - How Grace Works
+                <span style="margin-left:auto;font-size:11px;color:var(--text-sub)">tap to expand</span>
+            </summary>
+            <div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:12px">
+
+                <div style="background:#0a0a18;border:1px solid #1e1b4b;border-radius:10px;padding:12px">
+                    <div style="font-size:12px;font-weight:bold;color:#818cf8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px">🤖 AI Model</div>
+                    <div style="font-size:12px;color:var(--text-sub);line-height:1.6">
+                        Choose which AI powers your chatbot. Access it via the <b style="color:var(--text-main)">⚙️ menu inside a chat → Select AI model</b>.<br>
+                        • <b style="color:#22c55e">Llama 3.1 8B</b> - Fast, lightweight, good for casual chat.<br>
+                        • <b style="color:#f97316">Kimi K2</b> - Deep reasoning, emotionally nuanced, best for roleplay.<br>
+                        • <b style="color:#a855f7">Qwen3 32B</b> - Strong reasoning, great for complex scenarios.<br>
+                        • <b style="color:#3b82f6">GPT-OSS 20B</b> - OpenAI compact model, balanced quality.<br>
+                        • <b style="color:#555">Llama 4 Maverick</b> - Currently offline.
+                    </div>
+                </div>
+
+                <div style="background:#0a1200;border:1px solid #1a2e00;border-radius:10px;padding:12px">
+                    <div style="font-size:12px;font-weight:bold;color:#86efac;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px">🌡️ Temperature (Creativity)</div>
+                    <div style="font-size:12px;color:var(--text-sub);line-height:1.6">
+                        Controls how creative or predictable the AI's replies are. Set it in the <b style="color:var(--text-main)">model picker</b>.<br>
+                        • <b style="color:#86efac">0.1–0.5</b> - Focused, consistent, less surprising. Good for realistic slow-burn.<br>
+                        • <b style="color:#fbbf24">0.8–1.2</b> - Balanced. Recommended for most roleplay.<br>
+                        • <b style="color:#f87171">1.5–2.0</b> - Wild and unpredictable. Fun but may go off-script.
+                    </div>
+                </div>
+
+                <div style="background:#120a00;border:1px solid #2e1600;border-radius:10px;padding:12px">
+                    <div style="font-size:12px;font-weight:bold;color:#fb923c;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px">🎭 Realistic Encounter</div>
+                    <div style="font-size:12px;color:var(--text-sub);line-height:1.6">
+                        Toggle inside a chat via <b style="color:var(--text-main)">⚙️ → Realistic Encounter</b>.<br>
+                        When ON, the character spontaneously reacts to her day - a sudden memory, a sound outside, a text from a friend, a holiday mood. These short life moments appear naturally between your exchanges, making the chat feel alive and less like a script.
+                    </div>
+                </div>
+            </div>
+        </details>
+        
+
+        <div class="form-group">
+            <label id="lbl-api-key">Groq API Keys <span style="color:#888;font-size:11px">(used round-robin 1→2→3→... for longer sessions)</span></label>
+            <div id="groq-keys-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
+            <button onclick="addGroqKeyField()" style="background:#0084ff22;border:1px solid #0084ff55;color:#0084ff;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:bold;cursor:pointer;width:100%">＋ Add another key</button>
+        </div>
+        <div class="form-group">
+            <label id="lbl-pol-key">Pollinations Keys <span style="color:#888;font-size:11px">(Image AI - rotated round-robin)</span></label>
+            <div id="pol-keys-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
+            <button onclick="addPolKeyField()" style="background:#0084ff22;border:1px solid #0084ff55;color:#0084ff;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:bold;cursor:pointer;width:100%">＋ Add another key</button>
+            <div style="font-size:11px;color:var(--text-sub);margin-top:6px" id="lbl-pol-hint">Use key to unlock <b>klein-large</b> (higher quality). Get key at <a href="https://enter.pollinations.ai" target="_blank" style="color:#0084ff" rel="noopener noreferrer">enter.pollinations.ai</a> - no key needed (flux free)</div>
+        </div>
+
+        <div class="form-group" id="pollinations-model-group">
+            <label style="color:var(--text-sub);font-size:13px;font-weight:bold">🎨 Image Generation Model</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px" id="img-model-picker">
+                <button type="button" class="img-model-btn" data-model="flux-schnell" onclick="selectImgModel('flux-schnell')">
+                    <span style="font-size:15px">🚀</span><br>
+                    <b>Flux Schnell</b><br>
+                    <span>Limit: 10 img/h</span>
+                </button>
+                <button type="button" class="img-model-btn" data-model="zimage" onclick="selectImgModel('zimage')">
+                    <span style="font-size:15px">⚡</span><br>
+                    <b>Z-Image Turbo</b><br>
+                    <span>Limit: 4 img/h</span>
+                </button>
+            </div>
+            <div style="font-size:11px;color:var(--text-sub);margin-top:6px">Applies to portrait, avatar, and illustration generation.</div>
+        </div>
+
+        <div class="form-group">
+            <label style="color:var(--text-sub);font-size:13px;font-weight:bold">🌐 Chatbot Response Language</label>
+            <select id="ai-lang-select" class="form-control" style="padding:10px;font-size:14px" title="Select language">
+                <option value="English">🇬🇧 English</option>
+                <option value="Vietnamese">🇻🇳 Vietnamese</option>
+                <option value="Japanese">🇯🇵 Japanese</option>
+                <option value="Korean">🇰🇷 Korean</option>
+                <option value="Chinese">🇨🇳 Chinese</option>
+                <option value="Spanish">🇪🇸 Spanish</option>
+                <option value="French">🇫🇷 French</option>
+                <option value="German">🇩🇪 German</option>
+                <option value="Italian">🇮🇹 Italian</option>
+                <option value="Portuguese">🇵🇹 Portuguese</option>
+                <option value="Arabic">🇸🇦 Arabic</option>
+                <option value="Thai">🇹🇭 Thai</option>
+                <option value="Russian">🇷🇺 Russian</option>
+                <option value="Hindi">🇮🇳 Hindi</option>
+                <option value="Dutch">🇳🇱 Dutch</option>
+                <option value="Swedish">🇸🇪 Swedish</option>
+            </select>
+            <div style="font-size:11px;color:var(--text-sub);margin-top:4px">The AI will always respond in this language, regardless of what language you type in.</div>
+        </div>
+
+
+        <button class="btn-primary" onclick="saveSettings()" id="btn-save-settings"><span id="lbl-save-settings">Save Settings</span></button>
+
+        
+        <div style="margin-top:18px;background:var(--input-bg);border:1px solid var(--border);border-radius:12px;padding:14px">
+            <div style="font-size:13px;font-weight:bold;color:var(--text-sub);margin-bottom:4px">💾 Backup & Restore</div>
+            <div style="font-size:11px;color:var(--text-sub);margin-bottom:12px">Save all character data (avatar, portrait, chat history, health cycle) to JSON file. Chat illustration images (illust) are not included.</div>
+            <div style="display:flex;gap:8px">
+                <button onclick="exportData()" style="flex:1;background:#0084ff;color:#fff;border:none;padding:11px;border-radius:9px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><i class="fas fa-download"></i> Export</button>
+                <button onclick="document.getElementById('import-file-input').click()" style="flex:1;background:#22c55e;color:#fff;border:none;padding:11px;border-radius:9px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><i class="fas fa-upload"></i> Import</button>
+            </div>
+            <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importData(event)">
+            <div id="backup-status" style="font-size:11px;margin-top:8px;text-align:center;color:#22c55e;display:none"></div>
+        </div>
+
+        <div style="margin-top:18px;background:#1a0a0a;border:1px solid #7f1d1d;border-radius:12px;padding:14px">
+            <div style="font-size:13px;font-weight:bold;color:#fca5a5;margin-bottom:4px">Danger Zone</div>
+            <div style="font-size:11px;color:#fca5a5;margin-bottom:12px">Delete all chatbots, group chats, folders, and generated chat images. API keys, personas, and app settings will stay.</div>
+            <button onclick="deleteAllChatData()" style="width:100%;background:#7f1d1d;color:#fff;border:1px solid #ef444466;padding:11px;border-radius:9px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><i class="fas fa-trash-alt"></i> Delete Everything</button>
+        </div>
+    </div>
+</div>
+
+<div id="sc-group-create" class="screen">
+    <div class="sub-hdr">
+        <button class="c-back" onclick="closeScreen('sc-group-create')" title="Back"><i class="fas fa-chevron-left"></i></button>
+        <b>Create Group Chat</b>
+        <div style="width:20px"></div>
+    </div>
+    <div class="form-container">
+        <div class="form-group">
+            <label>Group Name</label>
+            <div class="field-row">
+                <input type="text" id="grp-name-input" class="form-control" placeholder="Ex: Shadow Squad...">
+                <button class="dice-btn" id="grp-name-dice" onclick="rollGroupName(this)" title="Random group name">🎲</button>
+            </div>
+        </div>
+        <div style="font-size:13px;font-weight:bold;color:var(--text-sub);margin-bottom:10px">Select members (min 2):</div>
+        <div id="member-pick-list"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 12px;background:var(--input-bg);border-radius:12px;border:1px solid var(--border)">
+            <i class="fas fa-id-card" style="color:#a855f7"></i>
+            <div style="flex:1">
+                <div style="font-size:13px;font-weight:bold">Use Dynamic Bio</div>
+                <div style="font-size:11px;color:var(--text-sub)">ON = use updated story bio · OFF = use original base bio</div>
+            </div>
+            <label class="toggle-switch" style="pointer-events:auto">
+                <input type="checkbox" id="grp-use-dynbio" checked title="Use dynamic bio">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+        <div id="grp-rel-section" class="rel-section" style="display:none">
+            <div class="rel-section-hdr">
+                <span>🤝 Relationship Setup <span style="font-size:10px;font-weight:normal;color:var(--text-sub)">(optional - shapes how each character behaves)</span></span>
+            </div>
+            <div id="grp-rel-cards"></div>
+            <div class="rel-group-section" style="padding:0 14px 12px">
+                <div class="rel-group-label">🌐 Overall Group Dynamic</div>
+                <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+                    <select id="grp-rel-preset" class="form-control" style="flex:1;min-width:0;font-size:12px;padding:6px 8px" onchange="selectRelPreset()" title="Select preset">
+                        <option value="">Select preset...</option>
+                        <option value="Old college friends reuniting after years">Old college friends</option>
+                        <option value="Rival siblings forced to work together">Rival siblings</option>
+                        <option value="Survivors of a shared trauma">Survivors</option>
+                        <option value="Coworkers on a dangerous mission">Coworkers</option>
+                        <option value="Family gathering after years apart">Family reunion</option>
+                        <option value="Strangers stuck together in an unusual situation">Strangers</option>
+                        <option value="Longtime rivals in a competition">Rivals</option>
+                        <option value="Childhood friends who grew apart">Childhood friends</option>
+                        <option value="Members of a secret organization">Secret organization</option>
+                        <option value="Travel companions on an adventure">Travel companions</option>
+                        <option value="Teacher and students">Teacher & students</option>
+                        <option value="Medical team in an emergency">Medical team</option>
+                        <option value="Military unit in wartime">Military unit</option>
+                        <option value="Space crew on a long mission">Space crew</option>
+                        <option value="Neighbors in a small town">Small town neighbors</option>
+                        <option value="Members of a band or musical group">Band members</option>
+                        <option value="Sports teammates">Sports teammates</option>
+                        <option value="Detectives working a case">Detectives</option>
+                        <option value="Cult members">Cult members</option>
+                        <option value="Escaped prisoners">Escaped prisoners</option>
+                    </select>
+                    <button onclick="randomizeGroupRel()" style="background:#9333ea;border:1px solid #9333ea;color:#fff;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:bold">🎲 Random</button>
+                </div>
+                <textarea id="grp-relation-input" rows="2" placeholder="Or write a custom relationship description..." class="rel-custom-input"></textarea>
+            </div>
+        </div>
+        
+        <div class="form-group" style="margin-top:14px;background:var(--input-bg);border:1px solid var(--border);border-radius:12px;padding:14px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                <i class="fas fa-globe" style="color:#0084ff;font-size:15px"></i>
+                <div style="font-size:13px;font-weight:bold">World Setting</div>
+            </div>
+
+            <div style="margin-bottom:10px">
+                <label style="font-size:11px;color:var(--text-sub);display:block;margin-bottom:4px">🏕️ Environment</label>
+                <input type="text" id="grp-world-input" class="form-control" placeholder="e.g. Home, Ship, Forest, Cave, Space Station, School...">
+            </div>
+
+            <div style="margin-bottom:10px">
+                <label style="font-size:11px;color:var(--text-sub);display:block;margin-bottom:4px">📖 Setting / Era <span style="opacity:0.6">(optional)</span></label>
+                <input type="text" id="grp-world-era" class="form-control" placeholder="e.g. Medieval Japan, 1920s Paris, One Piece universe, Naruto world...">
+            </div>
+
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+                <button class="world-gen-btn" id="grp-world-gen-btn" onclick="generateWorldRooms(this)" style="flex:1"><i class="fas fa-map-marker-alt"></i> Generate Locations</button>
+                <button class="world-gen-btn" id="grp-world-bg-btn" onclick="generateWorldBackground(this)" style="flex:1"><i class="fas fa-image"></i> Generate BG</button>
+            </div>
+
+            <div id="grp-world-gen-status" style="font-size:11px;color:var(--text-sub);font-style:italic;display:none">✨ Generating...</div>
+            <div id="grp-world-rooms-preview" style="display:none;margin-top:8px;background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:8px;font-size:11px;color:var(--text-main)"></div>
+            <img id="grp-world-preview" class="world-preview" alt="World preview" style="margin-top:8px">
+
+            <input type="hidden" id="grp-world-type" value="home">
+            <input type="hidden" id="grp-world-bgurl" value="">
+            <input type="hidden" id="grp-world-rooms-json" value="">
+        </div>
+        
+        <div style="margin-top:14px;background:var(--input-bg);border:1px solid #3b156b;border-radius:12px;padding:14px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                <i class="fas fa-user-circle" style="color:#b259ff;font-size:15px"></i>
+                <div style="font-size:13px;font-weight:bold;color:#b259ff">Your Persona (optional)</div>
+            </div>
+            <div style="font-size:11px;color:var(--text-sub);margin-bottom:8px">Choose who you're playing as in this group chat.</div>
+            <select id="grp-create-persona-select" class="form-control" style="border-color:#3b156b;font-size:13px;padding:8px" title="Select persona">
+                <option value="">- No Persona -</option>
+            </select>
+        </div>
+        <button class="btn-primary" style="margin-top:16px" onclick="saveGroup()">Create Group</button>
+    </div>
+</div>
+
+<div id="sc-group-chat" class="screen">
+    <div class="grp-chat-hdr">
+        <button class="c-back" onclick="closeGroupChat()" style="color:var(--text-main)" title="Back"><i class="fas fa-chevron-left"></i></button>
+        
+        <div style="flex:1;text-align:left;line-height:1.2;padding-left:4px;min-width:0;display:flex;align-items:center;gap:8px">
+            <div style="cursor:pointer;display:flex;align-items:center;gap:4px" onclick="toggleGroupMemberList()">
+                <b id="grp-c-name" style="color:var(--text-main)">Group</b> <span style="font-size:9px;color:#9333ea;vertical-align:middle;flex-shrink:0">▾</span>
+            </div>
+            <button onclick="openRoomListModal()" title="View rooms" style="background:#1a0b2e;border:1px solid #3b156b44;color:#9b7fe8;border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap">🏠 Rooms</button>
+        </div>
+        
+        <div id="grp-date-time-wrap" style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin-right:6px">
+            <div id="grp-virtual-season-badge" style="display:none;font-size:10px;color:#4ade80;background:#0d1a00;border:1px solid #4ade8044;border-radius:10px;padding:1px 7px;letter-spacing:0.3px">❄️</div>
+            <div id="grp-virtual-date-badge" style="display:none;font-size:11px;color:#9333ea;background:#1a0b2e;border:1px solid #3b156b;border-radius:8px;padding:1px 6px;cursor:pointer" onclick="showWeekCalendar(event)">📅 Day 1</div>
+            <div id="grp-virtual-clock-badge" style="display:none;font-size:10px;color:#f59e0b;background:#1a0e00;border:1px solid #f59e0b44;border-radius:10px;padding:1px 7px;letter-spacing:0.3px;cursor:pointer" onclick="showTimePicker(event)">⏰ 09:00</div>
+        </div>
+        
+        
+        <div style="position:relative">
+            <button class="hdr-icon-btn" onclick="toggleGroupSettings(event)" title="Settings" style="font-size:19px;padding:4px 8px;color:var(--text-main)">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <div class="settings-overlay" id="grp-settings-overlay" onclick="closeGroupSettings()"></div>
+            <div id="grp-settings-menu">
+                <div class="settings-drag-handle"></div>
+                <div class="settings-sheet-title">Group Settings</div>
+                <div class="settings-item" onclick="toggleModelPicker();closeGroupSettings()">
+                    <i class="fas fa-robot"></i> Select AI model
+                    <span id="grp-c-model" style="font-size:11px;color:#0084ff;margin-left:auto;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Llama 3.1 8B</span>
+                </div>
+                <div class="reply-length-row" id="reply-len-row-group">
+                    <i class="fas fa-text-height"></i>
+                    <span class="reply-length-label">Reply Length</span>
+                    <div class="reply-len-slider-wrap">
+                        <input type="range" class="reply-len-slider" id="reply-len-slider-2" min="0" max="3" step="1" value="1" oninput="setReplyLengthSlider(this.value)">
+                        <div class="reply-len-labels">
+                            <div class="reply-len-opt" data-len="short"><span class="reply-len-opt-name">Short</span><span class="reply-len-opt-hint">~40 words</span></div>
+                            <div class="reply-len-opt active" data-len="medium"><span class="reply-len-opt-name">Medium</span><span class="reply-len-opt-hint">~65 words</span></div>
+                            <div class="reply-len-opt" data-len="long"><span class="reply-len-opt-name">Long</span><span class="reply-len-opt-hint">~100 words</span></div>
+                            <div class="reply-len-opt" data-len="verylong"><span class="reply-len-opt-name">Very Long</span><span class="reply-len-opt-hint">~140 words</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-item" onclick="grpFullSyncDynBio()">
+                    <i class="fas fa-sync-alt" style="color:#a855f7"></i> <span style="color:#d0a0ff">Dynamic Bio Sync</span>
+                </div>
+                <div class="settings-item" onclick="toggleGroupRealisticEncounter(event)">
+                    <i class="fas fa-star"></i> Realistic Encounter
+                    <label class="toggle-switch" style="margin-left:auto;pointer-events:none">
+                        <input type="checkbox" id="grp-life-events-toggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="settings-item" onclick="updateGroupBackground();closeGroupSettings()">
+                    <i class="fas fa-magic"></i> AI Generate background
+                </div>
+                <div class="settings-item" onclick="openAddMemberModal();closeGroupSettings()">
+                    <i class="fas fa-user-plus" style="color:#22c55e"></i> <span style="color:#86efac">Add Member</span>
+                </div>
+                <div style="padding:12px 20px;border-bottom:1px solid #181818">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                        <i class="fas fa-image" style="width:22px;text-align:center;color:#0084ff;font-size:16px;flex-shrink:0"></i>
+                        <span style="font-size:14px;color:#eee">Image Model</span>
+                        <span id="grp-img-model-label" style="font-size:11px;color:#0084ff;margin-left:auto;font-weight:bold"></span>
+                    </div>
+                    <select id="grp-img-model-picker" onchange="selectImgModel(this.value);syncChatImgModelBtns()" style="width:100%;background:#1a1a1a;border:1px solid #333;color:#eee;border-radius:10px;padding:8px 12px;font-size:14px;outline:none;margin-bottom:8px">
+                        <option value="flux-schnell">🚀 Flux Schnell (Pollinations - Limit: 10 img/h)</option>
+                        <option value="zimage">⚡ Z-Image Turbo (Pollinations - Limit: 4 img/h)</option>
+                    </select>
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+                        <i class="fas fa-palette" style="color:#a855f7;font-size:14px;flex-shrink:0"></i>
+                        <span style="font-size:13px;color:#ccc;flex-shrink:0">Art Style</span>
+                        <select id="grp-img-style-select" onchange="setImgStyleOverride(this.value)" style="flex:1;background:#1a1a1a;border:1px solid #333;color:#eee;border-radius:8px;padding:5px 8px;font-size:13px;outline:none">
+                            <option value="">- Use character default -</option>
+                            <option value="photorealism">📷 Photorealism</option>
+                            <option value="anime">✨ Anime</option>
+                            <option value="semi-realistic">🎨 Semi-Realistic</option>
+                            <option value="manhwa">📖 Manhwa</option>
+                            <option value="artwork">🖌️ Artwork Illustration</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="settings-item danger" onclick="clearGroupChat();closeGroupSettings()">
+                    <i class="fas fa-broom"></i> Clear chat history
+                </div>
+                <div id="grp-token-menu-row" style="display:none;align-items:center;gap:13px;padding:12px 20px;border-top:1px solid #181818">
+                    <i class="fas fa-coins" style="width:22px;text-align:center;color:#f59e0b;font-size:17px;flex-shrink:0"></i>
+                    <div style="flex:1">
+                        <div style="font-size:13px;color:#eee">Token Usage</div>
+                        <div id="grp-session-token-badge" style="font-size:11px;color:#888;font-family:monospace;margin-top:2px"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="grp-member-list-dropdown" style="display:none;position:absolute;left:0;right:0;top:auto;background:var(--bg-panel);border-bottom:1px solid var(--border);padding:10px 16px 14px;z-index:50;max-height:70vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.5)">
+        <div style="font-size:10px;font-weight:bold;color:var(--text-sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Members</div>
+        <div id="grp-member-list-items" style="display:flex;flex-direction:column;gap:10px"></div>
+        
+        <div id="grp-story-log-section" style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+            <div onclick="toggleGrpStoryLog()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;margin-bottom:6px">
+                <div style="font-size:10px;font-weight:bold;color:#a855f7;text-transform:uppercase;letter-spacing:.5px">📖 Story Log</div>
+                <div style="display:flex;align-items:center;gap:6px">
+                    <button onclick="event.stopPropagation();refreshGrpStoryLog()" style="background:#1a0b2e;border:1px solid #7c3aed44;color:#a855f7;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    <span id="grp-story-log-chevron" style="font-size:13px;color:var(--text-sub);transition:transform .25s">▾</span>
+                </div>
+            </div>
+            <div id="grp-story-log-text" style="display:none;font-size:12px;color:var(--text-sub);line-height:1.6;background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;max-height:200px;overflow-y:auto">
+                <span style="font-style:italic">No story log yet - builds after a few exchanges.</span>
+            </div>
+        </div>
+    </div>
+    <div id="grp-chat-container" style="flex:1;overflow-y:auto;padding:16px"></div>
+    <div id="grp-typing-area" class="group-typing-wrap" style="min-height:0;padding-bottom:4px;display:none"></div>
+    <div class="chat-foot" style="position:relative">
+        <button class="persona-btn" onclick="openGroupPersonaPanel()" title="My Persona" style="color:#b259ff;margin-right:2px"><i class="fas fa-user-circle"></i></button>
+        <textarea id="grp-msg-input" rows="1" placeholder="Type a message..." oninput="autoResize(this)" onkeydown="handleGroupKey(event)" spellcheck="true"></textarea>
+        <button class="btn-thought-usr" onclick="insertThoughtGroup()" title="Inner thought" style="margin-left:2px">()</button>
+        <button class="btn-action-star" onmousedown="insertActionStarGroup();event.preventDefault()" ontouchstart="insertActionStarGroup();event.preventDefault()" title="Action">**</button>
+        <button class="hint-btn" onclick="showHintsGroup()" ontouchend="showHintsGroup();return false;" title="Hint" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent"><i class="fas fa-lightbulb"></i></button>
+    </div>
+</div>
+
+<div id="grp-hint-overlay" class="hint-overlay" onclick="this.style.display='none'" style="display:none">
+    <div class="hint-panel" onclick="event.stopPropagation()">
+        <div class="hint-title">
+            <span>💡 Next suggestions</span>
+            <button onclick="document.getElementById('grp-hint-overlay').style.display='none'" style="background:none;border:none;color:var(--text-sub);cursor:pointer;font-size:16px">✕</button>
+        </div>
+        <div id="grp-hint-content"><div class="hint-loading"><i class="fas fa-spinner fa-spin"></i> Generating suggestions...</div></div>
+    </div>
+</div>
+
+<div id="grp-persona-quick-overlay" class="hint-overlay" onclick="this.style.display='none'" style="display:none">
+    <div class="hint-panel" onclick="event.stopPropagation()" style="border:1px solid #3b156b;background:var(--bg-panel)">
+        <div class="hint-title" style="color:#b259ff">
+            <span>💜 My Persona (Group)</span>
+            <div style="display:flex;gap:8px;align-items:center">
+                <button onclick="document.getElementById('grp-persona-quick-overlay').style.display='none'" style="background:none;border:none;color:var(--text-sub);cursor:pointer;font-size:16px">✕</button>
+            </div>
+        </div>
+        
+        <div style="margin-bottom:10px">
+            <label style="font-size:11px;color:#888;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:5px">Active persona for this group:</label>
+            <div style="display:flex;gap:6px;align-items:center">
+                <select id="grp-persona-select" class="form-control" style="border-color:#3b156b;font-size:13px;padding:8px;flex:1" onchange="setGroupPersona(this.value)">
+                    <option value="">- None (no persona) -</option>
+                </select>
+                <button id="grp-persona-lock-btn" onclick="toggleGroupPersonaLock()" title="Lock persona" style="background:#1a0b2e;border:1px solid #3b156b;color:#b259ff;border-radius:10px;width:38px;height:38px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s">🔓</button>
+            </div>
+            <div id="grp-persona-lock-hint" style="font-size:10px;color:var(--text-sub);margin-top:4px;display:none">🔒 Locked - tap the lock to change persona.</div>
+        </div>
+        <div id="grp-persona-quick-content" style="font-size:13px;color:var(--text-main);line-height:1.7">
+            <div style="color:var(--text-sub);font-style:italic;text-align:center;padding:10px">No persona active.</div>
+        </div>
+    </div>
+</div>
+
+<div id="grp-bio-modal" class="bio-modal" onclick="this.style.display='none'">
+    <div class="bio-content" onclick="event.stopPropagation();event.stopImmediatePropagation()" style="position:relative">
+        <div class="bio-sticky-close">
+            <button class="bio-close-btn" onclick="
+                this.closest('#grp-bio-modal').style.display='none';
+                stopLaborTimerRefresh();
+                var _dd=document.getElementById('grp-member-list-dropdown');
+                if(_dd) _dd.style.display='none';
+                event.stopPropagation();
+            ">✕</button>
+        </div>
+        <div id="gp-portrait-wrap">
+            <img id="gp-portrait" src="" class="bio-portrait-full" style="display:none" alt="portrait" onclick="if(this.src)openImgZoom(this.src)">
+            <div id="gp-portrait-ph" class="bio-portrait-placeholder"><i class="fas fa-user"></i></div>
+        </div>
+        <div class="bio-drag-handle"></div>
+        <div id="gp-status-badge" class="status-badge" style="display:none"></div>
+        
+        <div class="bio-name-center">
+            <h3 id="gp-name">Name</h3>
+            <div class="bio-sub" id="gp-gen-badge"></div>
+        </div>
+        <div class="bio-body">
+            <div style="display:flex;gap:6px;margin-bottom:6px">
+                <div class="bio-detail-box" style="flex:1;margin-bottom:0">
+                    <div class="bio-detail-label">Age</div>
+                    <div class="bio-detail-text" id="gp-age">-</div>
+                </div>
+                <div class="bio-detail-box" style="flex:2;margin-bottom:0">
+                    <div class="bio-detail-label">Relationship <span style="font-size:9px;color:#9333ea">(in group)</span></div>
+                    <div class="bio-detail-text" id="gp-rel">-</div>
+                </div>
+            </div>
+            <div class="bio-detail-box">
+                <div class="bio-detail-label">Appearance</div>
+                <div class="bio-detail-text bio-text-collapsed" id="gp-app" onclick="toggleBioField(this)" title="Tap to expand">...</div>
+                <span class="bio-expand-hint" onclick="toggleBioField(document.getElementById('gp-app'))">▼ Show more</span>
+            </div>
+            <div id="gp-app-measures" style="display:none;margin-bottom:8px">
+                <div id="gp-body-meas-content"></div>
+            </div>
+            <div class="bio-detail-box">
+                <div class="bio-detail-label">Background</div>
+                <div class="bio-detail-text bio-text-collapsed" id="gp-bio" onclick="toggleBioField(this)" title="Tap to expand">...</div>
+                <span class="bio-expand-hint" onclick="toggleBioField(document.getElementById('gp-bio'))">▼ Show more</span>
+            </div>
+            <div class="bio-detail-box" id="gp-traits-box">
+                <div class="bio-detail-label">⚡ Traits</div>
+                <div id="gp-traits-chips" style="display:flex;flex-wrap:wrap;gap:5px;padding-top:4px"></div>
+            </div>
+            <div class="bio-detail-box" id="gp-personality-box" style="display:none">
+                <div class="bio-detail-label">🎭 Personality</div>
+                <div class="bio-detail-text" id="gp-personality">-</div>
+            </div>
+            <div class="bio-detail-box" id="gp-states-box" style="display:none">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                    <div class="bio-detail-label" style="margin-bottom:0">🏷️ States</div>
+                </div>
+                <div id="gp-states-chips" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+            </div>
+
+            
+            <div id="gp-schedule-section" style="margin-top:10px">
+                <div onclick="toggleGpScheduleView()" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:6px;cursor:pointer;user-select:none">
+                    <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden">
+                        <div style="font-size:11px;font-weight:bold;color:#f59e0b;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;flex-shrink:0">⏰ Daily Schedule</div>
+                        <span id="gp-sched-variant-badge" style="display:none;flex-shrink:0"></span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0" onclick="event.stopPropagation()">
+                        <button onclick="generateScheduleAIGroup()" id="gp-sched-ai-btn" style="background:#1a0b2e;border:1px solid #7c3aed44;color:#b259ff;border-radius:8px;padding:3px 10px;font-size:11px;cursor:pointer">✨ AI</button>
+                        <span id="gp-sched-chevron" style="font-size:13px;color:var(--text-sub);transition:transform .25s;margin-left:2px">▾</span>
+                    </div>
+                </div>
+                <div id="gp-sched-view-mode" style="background:var(--input-bg);border:1px solid #f59e0b22;border-radius:10px;padding:10px;font-size:12px;color:var(--text-sub)">
+                    <span id="gp-sched-view-text">No schedule set.</span>
+                </div>
+            </div>
+
+            
+            <div id="gp-memory-log-section" style="margin-top:10px">
+                <div style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;margin-bottom:6px" onclick="toggleGpMemoryLog()">
+                    <div style="font-size:11px;font-weight:bold;color:#a855f7;text-transform:uppercase;letter-spacing:0.5px">📖 Story Memory</div>
+                    <div style="display:flex;align-items:center;gap:6px">
+                        <button onclick="event.stopPropagation();refreshGpMemoryLog()" style="background:#1a0b2e;border:1px solid #7c3aed44;color:#a855f7;border-radius:8px;padding:3px 8px;font-size:10px;cursor:pointer;display:flex;align-items:center;gap:4px"><i class="fas fa-sync-alt"></i> Refresh</button>
+                        <span id="gp-memory-log-chevron" style="font-size:13px;color:var(--text-sub);transition:transform .25s">▾</span>
+                    </div>
+                </div>
+                <div id="gp-memory-log-text" style="display:none;background:var(--input-bg);border:1px solid #a855f722;border-radius:10px;padding:10px;font-size:12px;color:var(--text-main);line-height:1.6;max-height:200px;overflow-y:auto">
+                    <span style="font-style:italic;color:var(--text-sub)">No memory yet - builds after a few exchanges. Use Refresh to generate now.</span>
+                </div>
+            </div>
+
+            </div>
+            
+            <div id="gp-repro-section" style="display:none">
+                <div style="font-size:11px;font-weight:bold;color:#a855f7;text-transform:uppercase;letter-spacing:0.5px;margin-top:10px;margin-bottom:8px">🧬 Reproductive Health</div>
+                <div class="repro-panel" id="gp-cycle-panel">
+                    <div class="repro-title">🌙 Menstrual Cycle</div>
+                    <div class="repro-stat-row">
+                        <div class="repro-stat"><span class="rs-val" id="gp-rp-day">-</span><span class="rs-lbl">Cycle Day</span></div>
+                        <div class="repro-stat"><span class="rs-val" id="gp-rp-fertility">-</span><span class="rs-lbl">Fertility</span></div>
+                        <div class="repro-stat"><span class="rs-val" id="gp-rp-period">-</span><span class="rs-lbl">Next Period</span></div>
+                    </div>
+                    <div class="repro-phase-bar"><div class="repro-phase-fill" id="gp-rp-fill" style="width:0%;background:#f87171"></div></div>
+                    <div style="font-size:11px;font-weight:bold;color:var(--text-main);text-align:center;margin-top:2px" id="gp-rp-phase">-</div>
+                </div>
+                <div class="repro-panel" id="gp-preg-panel" style="display:none">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                        <div class="repro-title" style="margin-bottom:0">🤰 Pregnancy</div>
+                        <span id="gp-fetus-count-badge" style="font-size:11px;background:#1a0028;border:1px solid #a855f744;color:#c084fc;border-radius:10px;padding:3px 10px;font-weight:bold"></span>
+                    </div>
+                    <div class="preg-week-badge">
+                        <div class="pw-num" id="gp-preg-num">0</div>
+                        <div class="pw-info">
+                            <div class="pw-label" id="gp-preg-label">Week</div>
+                            <div class="pw-desc" id="gp-preg-desc">Early stage</div>
+                            <div id="gp-pw-fetus-info" style="display:none;margin-top:6px;font-size:11px;color:#c084fc;line-height:1.6"></div>
+                        </div>
+                    </div>
+                    <div style="font-size:12px;text-align:center;color:var(--text-sub);margin-bottom:8px" id="gp-preg-status">-</div>
+
+                    </div>
+                    <div class="preg-symptom-section" id="gp-preg-symptom-section" style="display:none">
+                        <div class="ps-label">🩺 Symptoms & Body Changes</div>
+                        <div id="gp-preg-symptoms"></div>
+                    </div>
+                    
+                    <div id="gp-labor-progress" style="display:none;margin-top:8px;background:linear-gradient(135deg,#1a0005,#3a0010);border:1px solid #ef444466;border-radius:10px;padding:10px 12px">
+                        <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:0.6px;color:#ef4444;margin-bottom:6px">🚨 Labor Progress</div>
+                        <div id="gp-labor-progress-content" style="font-size:11px;color:#fca5a5;line-height:1.7"></div>
+                    </div>
+                    
+                    <div id="gp-parasite-emergence" style="display:none;margin-top:8px;background:linear-gradient(135deg,#0d1a0d,#1a2e1a);border:1px solid #22c55e44;border-radius:10px;padding:10px 12px">
+                        <div style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:0.6px;color:#22c55e;margin-bottom:6px">👽 Parasite Emergence</div>
+                        <div id="gp-parasite-emergence-content" style="font-size:11px;color:#86efac;line-height:1.7"></div>
+                    </div>
+                </div>
+                <div class="repro-panel">
+                    <div class="repro-title">📋 Event Log</div>
+                    <div class="repro-event-log" id="gp-event-log"><div style="color:var(--text-sub);font-size:11px;font-style:italic">No events yet.</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="add-member-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:600;align-items:flex-end;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
+    <div style="background:var(--bg-panel);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;display:flex;flex-direction:column;border:1px solid var(--border)" onclick="event.stopPropagation()">
+        <div style="padding:16px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+            <div style="font-size:15px;font-weight:bold;color:var(--text-main)">➕ Add Member</div>
+            <button onclick="document.getElementById('add-member-modal').style.display='none'" style="background:none;border:none;color:var(--text-sub);font-size:22px;cursor:pointer;line-height:1;padding:0 4px">✕</button>
+        </div>
+        <div style="overflow-y:auto;flex:1;padding:12px 16px 20px">
+            <div style="font-size:12px;color:var(--text-sub);margin-bottom:10px">Select character to add:</div>
+            <div id="add-member-pick-list"></div>
+            <div id="add-member-rel-section" style="display:none;margin-top:14px">
+                <div style="font-size:12px;font-weight:bold;color:#60a5fa;margin-bottom:8px">🤝 Their relationships with existing members:</div>
+                <div id="add-member-rel-cards"></div>
+                <button id="randomize-all-rels-btn" onclick="randomizeAllRelationshipsForNewMember()" style="width:100%;background:#8b5cf6;color:#fff;border:none;padding:10px;border-radius:10px;font-size:13px;font-weight:bold;cursor:pointer;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:6px">✨ Randomize All Relationships</button>
+            </div>
+            <button onclick="confirmAddMember()" style="width:100%;background:#22c55e;color:#fff;border:none;padding:13px;border-radius:12px;font-size:15px;font-weight:bold;cursor:pointer;margin-top:14px">Add to Group</button>
+        </div>
+    </div>
+</div>
+
+<div id="cycle-change-banner" style="display:none">
+    <div class="banner-title">�-️ Story Change Detected</div>
+    <div class="banner-desc" id="cycle-change-desc">AI detected a change to pregnancy/cycle progression.</div>
+    <div class="banner-buttons">
+        <button class="banner-btn-confirm" onclick="confirmCycleChange()">✓ Apply Change</button>
+        <button class="banner-btn-dismiss" onclick="dismissCycleChange()">Ignore</button>
+    </div>
+</div>
+
+<div id="exit-confirm-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)">
+    <div style="background:#1a1a1a;border:1px solid #333;border-radius:20px;margin:24px;padding:24px 20px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.8);width:100%;max-width:320px">
+        <div style="font-size:28px;margin-bottom:10px">👋</div>
+        <div style="font-size:17px;font-weight:bold;margin-bottom:6px;color:#fff">Leave Grace AI?</div>
+        <div style="font-size:13px;color:#888;margin-bottom:20px">Your characters and chats are saved.</div>
+        <div style="display:flex;gap:10px">
+            <button onclick="document.getElementById('exit-confirm-overlay').style.display='none'" style="flex:1;background:#222;border:1px solid #444;color:#ccc;border-radius:12px;padding:13px;font-size:15px;font-weight:bold;cursor:pointer">Stay</button>
+            <button onclick="window._confirmExit()" style="flex:1;background:#ef4444;border:none;color:#fff;border-radius:12px;padding:13px;font-size:15px;font-weight:bold;cursor:pointer">Exit</button>
+        </div>
+    </div>
+</div>
+
+<div id="week-calendar-popup" style="display:none;position:fixed;top:60px;right:10px;z-index:500;background:#1a0b2e;border:1px solid #3b156b;border-radius:16px;padding:14px 16px;min-width:260px;box-shadow:0 8px 30px rgba(0,0,0,0.7)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div id="cal-month-label" style="font-size:13px;font-weight:bold;color:#c084fc"></div>
+        <button onclick="document.getElementById('week-calendar-popup').style.display='none'" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer;padding:0 4px">✕</button>
+    </div>
+    <div id="cal-week-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center"></div>
+    <div id="cal-holiday-note" style="margin-top:10px;font-size:11px;color:#f9a8d4;display:none"></div>
+    <div style="margin-top:8px;font-size:10px;color:#555;text-align:center">Tap future day to skip · Past days disabled</div>
+</div>
+
+<div id="time-picker-popup" style="display:none;position:fixed;top:100px;right:10px;z-index:500;background:#1a0b2e;border:1px solid #3b156b;border-radius:16px;padding:14px 16px;min-width:260px;box-shadow:0 8px 30px rgba(0,0,0,0.7)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:bold;color:#f59e0b">⏰ Forward to Time</div>
+        <button onclick="document.getElementById('time-picker-popup').style.display='none'" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer;padding:0 4px">✕</button>
+    </div>
+    <div id="clock-display" style="background:#0d0d1a;border:2px solid #3b156b;border-radius:50%;width:120px;height:120px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;position:relative">
+        <div id="clock-time" style="font-size:24px;font-weight:bold;color:#f59e0b;font-family:monospace">12:00</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button onclick="addHour(1)" style="flex:1;background:#1e1e3a;border:1px solid #3b156b;color:#a855f7;border-radius:8px;padding:8px;font-size:13px;font-weight:bold;cursor:pointer">+1h</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button onclick="addMinute(30)" style="flex:1;background:#1e1e3a;border:1px solid #3b156b;color:#a855f7;border-radius:8px;padding:8px;font-size:13px;font-weight:bold;cursor:pointer">+30m</button>
+    </div>
+    <button onclick="skipToTime()" style="width:100%;background:#f59e0b;border:none;color:#1a0b2e;border-radius:8px;padding:10px;font-size:13px;font-weight:bold;cursor:pointer">Forward to Time</button>
+</div>
+
+<div id="img-zoom-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9998;align-items:center;justify-content:center;overflow:hidden">
+    <img id="img-zoom-src" style="max-width:92%;max-height:92%;object-fit:contain;border-radius:8px;touch-action:none;transform-origin:center center" src="">
+    <div id="img-zoom-close" style="position:fixed;top:16px;right:16px;color:#fff;font-size:24px;cursor:pointer;width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);border-radius:50%;z-index:9999;backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.2);pointer-events:all" onclick="closeImgZoom()">✕</div>
+</div>
+
+<div id="status-tooltip" class="status-tooltip" onclick="event.stopPropagation()">
+    <div class="st-name" id="st-char-name"></div>
+    <div class="st-row">
+        <div class="st-icon" id="st-icon">❓</div>
+        <div class="st-info">
+            <div class="st-label" id="st-label">Unknown</div>
+            <div class="st-desc" id="st-desc">No data yet</div>
+        </div>
+    </div>
+    <div class="st-bio-link" onclick="hideStatusTooltip();openProfileFromTooltip()">See full profile →</div>
+</div>
+
+
+<div id="trait-picker-overlay" class="trait-picker-overlay" onclick="if(event.target===this)closeTraitPicker()" style="display:none;pointer-events:none">
+  <div class="trait-picker-panel" onclick="event.stopPropagation()">
+    <div class="trait-picker-hdr">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:14px;font-weight:bold">✨ Add Trait</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button onclick="rollRandomPersonalityTraits()" title="Add random Personality traits" style="background:#0a1a30;border:1px solid #0084ff44;color:#60a5fa;border-radius:8px;padding:4px 10px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px"><span style="font-size:15px">🎲</span></button>
+          <div id="trait-limit-info" style="font-size:11px;color:#888"></div>
+          <button onclick="closeTraitPicker()" style="background:none;border:none;color:var(--text-sub);font-size:22px;cursor:pointer;line-height:1;padding:0 0 0 4px">✕</button>
+        </div>
+      </div>
+      <input id="trait-picker-search-input" class="trait-picker-search" placeholder="Search traits..." oninput="filterTraitPicker(this.value)" autocomplete="off">
+      <div class="trait-picker-tabs">
+        <button class="trait-picker-tab active" data-tab="all" onclick="setTraitTab('all')">All</button>
+        <button class="trait-picker-tab" data-tab="personality" onclick="setTraitTab('personality')">🎭 Personality</button>
+        <button class="trait-picker-tab" data-tab="genetic" onclick="setTraitTab('genetic')">🧬 Genetic</button>
+      </div>
+    </div>
+    <div id="trait-picker-live-summary" style="display:none;padding:6px 14px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;gap:5px;background:var(--bg-main)"></div>
+    <div id="trait-picker-body" class="trait-picker-body"></div>
+    <div style="padding:10px 14px 4px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--text-sub);margin-bottom:6px">✏️ Custom trait:</div>
+      <div class="trait-custom-row">
+        <input id="trait-custom-inp" class="trait-custom-input" placeholder="Custom name..." onkeydown="if(event.key==='Enter')addCustomTrait()">
+        <button id="trait-custom-cat" data-cat="personality"
+          onclick="this.dataset.cat=this.dataset.cat==='personality'?'genetic':'personality';this.textContent=this.dataset.cat==='personality'?'🎭':'🧬';this.style.background=this.dataset.cat==='personality'?'#0a1a30':'#1a0b2e';this.style.color=this.dataset.cat==='personality'?'#60a5fa':'#c084fc'"
+          style="background:#0a1a30;color:#60a5fa;border:1px solid #0084ff44;border-radius:10px;padding:9px 14px;font-size:16px;cursor:pointer">🎭</button>
+        <button onclick="addCustomTrait()" style="background:#0084ff;color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:16px;cursor:pointer">✓</button>
+      </div>
+    </div>
+    <div class="trait-picker-footer">
+      <button onclick="closeTraitPicker()" style="width:100%;background:var(--bg-main);border:1px solid var(--border);color:var(--text-main);padding:11px;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer">Done ✓</button>
+    </div>
+  </div>
+</div>
+
+<div id="pw-overlay" class="pw-overlay" onclick="if(event.target===this)closePwOverlay()" style="display:none;pointer-events:none">
+  <div class="pw-box">
+    <div class="pw-title">🔒 Hidden Characters</div>
+    <div class="pw-sub">Tap unlock to view hidden characters</div>
+    <button onclick="pwSubmit()" style="width:100%;background:#0084ff;color:#fff;border:none;border-radius:12px;padding:12px;font-size:15px;font-weight:bold;cursor:pointer;margin-bottom:10px">Unlock</button>
+    <button onclick="closePwOverlay()" style="width:100%;background:none;border:1px solid #333;color:#888;border-radius:12px;padding:10px;font-size:14px;cursor:pointer">Cancel</button>
+  </div>
+</div>
+
+<div id="sc-hidden" class="screen">
+  <div class="home-hdr" style="background:var(--header-bg)">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="c-back" onclick="closeHiddenScreen()" title="Back"><i class="fas fa-chevron-left"></i></button>
+      <h1 style="font-size:17px">Hidden Characters</h1>
+    </div>
+    <span style="font-size:12px;color:#666">🔒 Private</span>
+  </div>
+  <div id="hidden-bot-list" style="flex:1;overflow-y:auto;padding:16px"></div>
+</div>
+
+<div id="card-ctx-overlay" style="position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.55);display:none;align-items:flex-end;justify-content:center;padding-bottom:40px" onclick="if(event.target===this)closeCardCtx()">
+  <div class="card-ctx-panel" onclick="event.stopPropagation()">
+    <div id="card-ctx-name" class="card-ctx-name">Character</div>
+    <button id="ctx-fav-btn" class="card-ctx-btn fav" onclick="ctxToggleFav()"><i class="fas fa-star"></i><span id="ctx-fav-label">Favourite</span></button>
+    <button id="ctx-hide-btn" class="card-ctx-btn hide-btn" onclick="ctxToggleHide()"><i class="fas fa-eye-slash"></i><span id="ctx-hide-label">Hide</span></button>
+    <button class="card-ctx-btn" style="color:#a78bfa" onclick="(function(){var id=_ctxBotId;closeCardCtx();openAddToFolderModal(id);})()"><i class="fas fa-folder-plus" style="color:#a78bfa"></i>Add to Folder</button>
+    <div style="height:1px;background:#222;margin:6px 0"></div>
+    <button id="ctx-del-btn" class="card-ctx-btn danger" onclick="ctxDelete()"><i class="fas fa-trash"></i>Delete</button>
+  </div>
+</div>
+
+<div id="grp-ctx-overlay" style="position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.55);display:none;align-items:flex-end;justify-content:center;padding-bottom:40px" onclick="if(event.target===this)closeGrpCtx()">
+  <div class="card-ctx-panel" onclick="event.stopPropagation()">
+    <div id="grp-ctx-name" class="card-ctx-name">Group</div>
+    <div style="height:1px;background:#222;margin:6px 0"></div>
+    <button class="card-ctx-btn danger" onclick="grpCtxDelete()"><i class="fas fa-trash"></i>Delete Group</button>
+  </div>
+</div>
+
+
+<div id="intimacy-confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:10000;align-items:center;justify-content:center" onclick="if(event.target===this){this.style.display='none';}">
+    <div style="background:#111;border:1px solid #333;border-radius:18px;padding:22px 20px;max-width:320px;width:90%;box-shadow:0 12px 40px rgba(0,0,0,0.8)">
+        <div style="font-size:22px;text-align:center;margin-bottom:10px">💕</div>
+        <div style="font-size:15px;font-weight:bold;color:#eee;text-align:center;margin-bottom:8px">Intimate Moment</div>
+        <div id="intimacy-confirm-msg" style="font-size:13px;color:#aaa;text-align:center;margin-bottom:20px;line-height:1.5"></div>
+        <div style="display:flex;gap:10px">
+            <button id="intimacy-confirm-no" style="flex:1;padding:11px;border-radius:12px;border:1px solid #333;background:#1a1a1a;color:#888;font-size:14px;cursor:pointer">Skip</button>
+            <button id="intimacy-confirm-yes" style="flex:1;padding:11px;border-radius:12px;border:none;background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;font-size:14px;font-weight:bold;cursor:pointer">Apply effects</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Update Background confirm modal ── -->
+<div id="update-bg-confirm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:9100;align-items:center;justify-content:center" onclick="if(event.target===this)_closeUpdateBgConfirm()">
+    <div style="background:#111;border:1px solid #2a2a2a;border-radius:20px;padding:24px 20px;max-width:320px;width:90%;box-shadow:0 12px 40px rgba(0,0,0,0.85)">
+        <div style="font-size:28px;text-align:center;margin-bottom:10px">🖼️</div>
+        <div style="font-size:16px;font-weight:bold;color:#eee;text-align:center;margin-bottom:6px">Update Background</div>
+        <div id="update-bg-confirm-msg" style="font-size:13px;color:#888;text-align:center;margin-bottom:22px;line-height:1.6"></div>
+        <div style="display:flex;gap:10px">
+            <button onclick="_closeUpdateBgConfirm()" style="flex:1;padding:12px;border-radius:12px;border:1px solid #333;background:#1a1a1a;color:#888;font-size:14px;cursor:pointer">Cancel</button>
+            <button id="update-bg-confirm-yes" style="flex:1;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#0055cc,#0084ff);color:#fff;font-size:14px;font-weight:bold;cursor:pointer">Update</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Update Avatar confirm modal ── -->
+<div id="update-av-confirm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:9100;align-items:center;justify-content:center" onclick="if(event.target===this)_closeUpdateAvConfirm()">
+    <div style="background:#111;border:1px solid #2a2a2a;border-radius:20px;padding:24px 20px;max-width:320px;width:90%;box-shadow:0 12px 40px rgba(0,0,0,0.85)">
+        <div style="font-size:28px;text-align:center;margin-bottom:10px">🧑‍🎨</div>
+        <div style="font-size:16px;font-weight:bold;color:#eee;text-align:center;margin-bottom:6px">Update Avatar</div>
+        <div id="update-av-confirm-msg" style="font-size:13px;color:#888;text-align:center;margin-bottom:22px;line-height:1.6"></div>
+        <div style="display:flex;gap:10px">
+            <button onclick="_closeUpdateAvConfirm()" style="flex:1;padding:12px;border-radius:12px;border:1px solid #333;background:#1a1a1a;color:#888;font-size:14px;cursor:pointer">Cancel</button>
+            <button id="update-av-confirm-yes" style="flex:1;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:14px;font-weight:bold;cursor:pointer">Generate</button>
+        </div>
+    </div>
+</div>
+
+
+<script src="js/repro/cycle.js"></script>
+<script src="js/repro/pregnancy_data.js"></script>
+<script src="js/repro/parasite.js"></script>
+<script src="js/repro/intercourse.js"></script>
+<script src="js/repro/render.js"></script>
+<script src="js/repro/symptoms.js"></script>
+<script src="js/repro/body.js"></script>
+<script src="js/repro/context.js"></script>
+<script src="js/shared.js" charset="UTF-8"></script>
+<script src="js/shared/traits.js" charset="UTF-8"></script>
+<script src="js/shared/image_gen.js"></script>
+<script src="js/shared/persona.js"></script>
+<script src="js/shared/bot_form.js"></script>
+<script src="js/shared/render_chat.js"></script>
+<script src="js/shared/time_advance.js"></script>
+<script type="module">
+    import { Http } from 'https://cdn.jsdelivr.net/npm/@capacitor/http@6.0.0/dist/esm/index.js';
+    window.Http = Http;
+</script>
+<script src="js/img_prompts.js"></script>
+<script src="js/schedule.js"></script>
+<script src="solochat/life_events.js"></script>
+<script src="solochat/story_tools.js"></script>
+<script src="solochat/portrait_update.js"></script>
+<script src="solochat/chat.js" charset="UTF-8"></script>
+<script src="grchat/movement.js"></script>
+<script src="grchat/rooms.js"></script>
+<script src="grchat/preg_interact.js"></script>
+<script src="grchat/group_system.js"></script>
+<script src="grchat/ai_detect.js"></script>
+<script src="grchat/settings.js"></script>
+<script src="grchat/chat.js"></script>
+
+
+
+<!-- ── STATE PICKER OVERLAY ── -->
+<div id="state-picker-overlay" class="trait-picker-overlay" onclick="closeStatePicker()" style="display:none">
+    <div class="trait-picker-panel" onclick="event.stopPropagation()" style="border-color:#f59e0b44">
+        <div class="trait-picker-hdr">
+            <div style="font-size:14px;font-weight:bold;color:#f59e0b;margin-bottom:8px">🏷️ Character States</div>
+            <input class="trait-picker-search" id="state-picker-search" placeholder="Search states..." oninput="filterStatePicker(this.value)">
+        </div>
+        <div class="trait-picker-body" id="state-picker-body"></div>
+        <div style="padding:12px 16px;border-top:1px solid var(--border)">
+            <button onclick="closeStatePicker()" style="width:100%;background:#f59e0b;color:#000;border:none;border-radius:12px;padding:10px;font-size:14px;font-weight:bold;cursor:pointer">Done</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- ── ROOM LIST DEBUG MODAL ── -->
+<div id="room-list-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:350;backdrop-filter:blur(3px)" onclick="closeRoomListModal()">
+  <div onclick="event.stopPropagation()" style="position:fixed;bottom:0;left:0;right:0;background:#0e0e0e;border:1px solid #222;border-radius:22px 22px 0 0;padding:0 0 14px;max-height:80vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,0.8)">
+    <div style="width:40px;height:4px;background:#333;border-radius:4px;margin:12px auto 4px"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 18px 10px">
+      <div style="font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:1px">🏠 Group Rooms</div>
+      <button onclick="closeRoomListModal()" style="background:none;border:none;color:#555;font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <div id="room-list-body" style="padding:0 14px 8px;display:flex;flex-direction:column;gap:6px"></div>
+    <div style="padding:10px 14px 4px;border-top:1px solid #1a1a1a;display:flex;align-items:center;gap:8px">
+      <div id="room-list-source-badge" style="font-size:10px;color:#555;flex:1"></div>
+      <button onclick="closeRoomListModal()" style="background:#1a1a1a;border:1px solid #2a2a2a;color:#aaa;border-radius:10px;padding:8px 16px;font-size:12px;cursor:pointer">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TIME PICKER POPUP FOR GROUP CHAT ── -->
+<div id="grp-time-picker-popup" style="display:none;position:fixed;top:60px;right:10px;background:#12122a;border:1px solid #3b156b;border-radius:8px;padding:8px 10px;z-index:1001;box-shadow:0 4px 20px rgba(0,0,0,0.5);min-width:160px">
+  <div style="font-size:11px;font-weight:bold;color:#9b7fe8;margin-bottom:6px">⏰ Forward to Time</div>
+  <div id="grp-clock-display" style="background:#0a0a1a;border:2px solid #3b156b;border-radius:50%;width:80px;height:80px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center">
+    <div id="grp-clock-time" style="font-size:16px;font-weight:bold;color:#9b7fe8;font-family:monospace">12:00</div>
+  </div>
+  <div style="display:flex;gap:4px;margin-bottom:6px">
+    <button onclick="addHour(1)" style="flex:1;background:#1a1a3a;border:1px solid #3b156b;color:#9b7fe8;border-radius:6px;padding:4px;font-size:10px;font-weight:bold;cursor:pointer">+1h</button>
+  </div>
+  <div style="display:flex;gap:4px;margin-bottom:6px">
+    <button onclick="addMinute(30)" style="flex:1;background:#1a1a3a;border:1px solid #3b156b;color:#9b7fe8;border-radius:6px;padding:4px;font-size:10px;font-weight:bold;cursor:pointer">+30m</button>
+  </div>
+  <button onclick="skipToTime()" style="width:100%;background:#9333ea;color:#fff;border:none;border-radius:6px;padding:6px;font-size:11px;font-weight:bold;cursor:pointer">Forward</button>
+</div>
+
+<!-- ══ FOLDER MODAL ══ -->
+<div id="folder-modal-overlay" class="folder-modal-overlay" onclick="if(event.target===this)closeFolderModal()">
+  <div class="folder-modal" onclick="event.stopPropagation()">
+    <div class="folder-modal-hdr">
+      <span class="folder-modal-title" id="folder-modal-title">📁 Manage Folders</span>
+      <button class="folder-modal-close" onclick="closeFolderModal()">✕</button>
+    </div>
+    <div id="folder-modal-body" style="padding:14px 16px"></div>
+  </div>
+</div>
+
+
+<script>
+function closeBothRoomListAndBioModal() {
+    const roomListOverlay = document.getElementById('room-list-overlay');
+    const bioModal = document.getElementById('grp-bio-modal');
+    if (roomListOverlay) roomListOverlay.style.display = 'none';
+    if (bioModal) bioModal.style.display = 'none';
+}
+</script>
+
+</body>
+</html>
