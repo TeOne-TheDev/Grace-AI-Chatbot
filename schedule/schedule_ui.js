@@ -54,3 +54,10 @@ function _sanitizeScheduleRooms(schedule) {
     
     return schedule;
 }
+
+// Expose globally
+window.toggleScheduleView = toggleScheduleView;
+window.toggleGpScheduleView = toggleGpScheduleView;
+window._keyForBot = _keyForBot;
+window._repairScheduleJSON = _repairScheduleJSON;
+window._sanitizeScheduleRooms = _sanitizeScheduleRooms;

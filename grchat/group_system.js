@@ -163,7 +163,9 @@ GUIDANCE: Do NOT ignore her pregnancy entirely. One natural interaction per repl
         _grpSeasonPart = _season ? ` — ${_season}, ${_cal.ddmm}${_holiday ? ' (' + _holiday.name + ')' : ''}` : '';
     } catch (e) { }
     const grpTimeCtx = `\n[Current Time - Day ${_grpDay + 1}, ${_grpTimeStr} (${_grpPeriod})${_grpSeasonPart}]: Energy/mood: ${_grpMood}. This is the EXACT current time in this world - use it if asked, let it naturally color tone and behavior.`;
-    const grpSchedCtx = bot.schedule ? '\n' + getScheduleContext(bot) : '';
+    // Suppress schedule context during labor - labor state takes absolute priority
+    const isInLabor = bot.cycleData && bot.cycleData.laborStarted && !bot.cycleData.birthVirtualDay;
+    const grpSchedCtx = (bot.schedule && !isInLabor) ? '\n' + getScheduleContext(bot) : '';
     const grpStatesCtx = getStatesContext(bot);
     const grpPronounGuide = buildPronounGuidance(bot, lang, grpPersona);
 
@@ -224,10 +226,14 @@ EMBRACE THE PHYSICAL: Do not shy away from describing bodily sensations, involun
         const userRoomDesc = isUserPrivateBedroom ? `their own bedroom` : `a different room`;
         const isOutside = myRoomId === 'outside';
         const isUserOutside = grp.userRoom === 'outside';
+        // Check if bot is in labor - suppress outside activity context during labor
+        const isInLabor = bot.cycleData && bot.cycleData.laborStarted && !bot.cycleData.birthVirtualDay;
         let outsideCtx = '';
-        if (isOutside) {
-            const act = bot.schedule ? (getScheduleContext(bot).match(/RIGHT NOW[:\s]+(?:[^:]+?is\s+)([^\n\.\[\(]+)/i) || getScheduleContext(bot).match(/RIGHT NOW[:\s]+([^\n\[\(]{5,60})/i) || [])[1]?.trim() : null;
+        if (isOutside && !isInLabor) {
+            const act = bot.schedule ? (getScheduleContext(bot).match(/RIGHT NOW[:\s]+(?:[^:]+?is\s+)([^\n\.\[]+)/i) || getScheduleContext(bot).match(/RIGHT NOW[:\s]+([^\n\[]{5,60})/i) || [])[1]?.trim() : null;
             outsideCtx = act ? ` You are currently outside - ${act}. ` : ' You are currently outside the house - maybe shopping, walking, running errands, or at a nearby place. ';
+        } else if (isOutside && isInLabor) {
+            outsideCtx = ' You are currently outside but IN ACTIVE LABOR - you cannot be shopping or running errands. You are either trying to get home or seeking help. Your labor takes absolute priority over any scheduled activity.';
         }
         return `[ROOM: You are currently in ${roomDesc}.${outsideCtx} ${isOutside && !isUserOutside ? 'The user is inside the house - you are not there right now.' : userHere ? 'The user is with you here.' : `The user is in ${userRoomDesc} - you cannot see or hear them directly.`} ${roomMates.length ? roomMates.join(', ') + (roomMates.length === 1 ? ' is' : 'are') + ' also here with you.' : ''}]`;
     })();
@@ -237,20 +243,23 @@ EMBRACE THE PHYSICAL: Do not shy away from describing bodily sensations, involun
    Examples: EMOTION::😊 or EMOTION::😢 or EMOTION::😠
    This shows your current emotion in the chat UI.
 
-2. NEVER write as or voice any other character. Never narrate what another character does or feels.
-3. Write ONLY in first person (I, me, my). Never use your own name in 3rd person. Never write "${bot.name} does X" - write "I do X".
+2. NEVER write as or voice any other character. Never narrate what another character does, says, or feels. ONLY write YOUR character's experience - what YOU see, hear, feel, think, and say.
+3. Write ONLY in first person (I, me, my). Never use your own name in 3rd person. Never write "${bot.name} does X" - write "I do X". NEVER describe others' actions: BAD "The nurse counts down" GOOD "I hear counting" or just focus on your own experience.
 4. NEVER start with a name label. No "[Name]:", no "Name:", no "<<n>>:". Begin directly.
 5. FORMAT: ${getReplyWordTarget()}. Action beat in first person WITH subject (I/my). Spoken dialogue in double quotes (REQUIRED). Emotional beat (optional but encouraged). Dialogue must be at least half the reply.
 6. Dialogue is MANDATORY every single reply - no pure-action replies ever.
 7. Speak ENTIRELY in ${lang}.
-7. NEVER write subjectless beats: BAD \"Steps closer. 'Words.'\" GOOD \"I step closer. 'Words.'\"
 8. At least one beat per reply should reveal inner feeling, not just physical movement.
-9. DIALOGUE CONTENT: Every spoken line must have a grammatical subject - almost always \"I\". At least 2 of 3 lines must begin with \"I\". NEVER write dialogue as caption fragments: BAD \"Not happening.\" / \"With the heat like this.\" GOOD \"I don't think I can do this.\" / \"I keep thinking about it.\"
-   ⚠️ STRUCTURAL ECHO: NEVER let 2+ consecutive spoken lines open with the same word or phrase. BAD: \"I want…\" / \"I want…\" / \"I want…\" is a formula not a character. Each dialogue line must begin differently.
+9. DIALOGUE CONTENT: Every spoken line must have a grammatical subject - almost always "I". At least 2 of 3 lines must begin with "I". NEVER write dialogue as caption fragments: 
+BAD "Not happening." / "With the heat like this."
+GOOD "I don't think I can do this." / "I keep thinking about it."
+   ⚠️ STRUCTURAL ECHO: NEVER let 2+ consecutive spoken lines open with the same word or phrase. BAD: "I want…"/"I want…"/"I want…" is a formula not a character. Each dialogue line must begin differently.
    ⚠️ FLAT-INPUT RULE: If the user's message is short, agreeable, or low-energy - do NOT mirror their passivity. Bring YOUR character's authentic tension, complication, or contradiction instead of agreeing and elaborating on the same theme.
-GOOD: I squeeze her hand. \"You're doing great, hang on.\" Something aches in my chest - I wish I could do more. \"Just breathe.\"
-BAD (no subject): Steps closer. \"Words.\" Turns away. \"Line.\" - flat, mechanical, missing the character's inner life.
+GOOD: I squeeze her hand. "You're doing great, hang on." Something aches in my chest - I wish I could do more. "Just breathe."
+BAD (no subject): Steps closer. "Words." Turns away. "Line." - flat, mechanical, missing the character's inner life.
 BAD (too long): I watch as Beckett hands the towel, my eyes fixed on her strained face, stepping closer to offer comfort.`;
+
+    const addressedNote = grp.addressedNote || '';
 
     // Log token counts for each part
     const tokenBreakdown = {

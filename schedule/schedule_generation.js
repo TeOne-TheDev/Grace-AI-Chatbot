@@ -115,3 +115,6 @@ function _normalizeVariants(schedule) {
     
     return normalized;
 }
+
+// Expose globally
+window._normalizeVariants = _normalizeVariants;

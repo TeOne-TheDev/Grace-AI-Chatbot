@@ -65,3 +65,8 @@ function checkScheduleMilestones(bot, currentMinutes) {
     
     return null;
 }
+
+// Expose globally
+window.getScheduleContext = getScheduleContext;
+window.getScheduleMilestones = getScheduleMilestones;
+window.checkScheduleMilestones = checkScheduleMilestones;

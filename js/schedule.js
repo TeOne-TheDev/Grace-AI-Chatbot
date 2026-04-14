@@ -32,31 +32,12 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 // Available rooms (mirrors PRESET_ROOMS + bot private bedrooms)
-const SOLO_ROOMS = [
-    { id:'bathroom',    name:'Bathroom' },
-    { id:'bedroom',     name:'Bedroom' },
-    { id:'living_room', name:'Living Room' },
-    { id:'kitchen',     name:'Kitchen' },
-    { id:'dining_room', name:'Dining Room' },
-    { id:'nursery',     name:'Nursery' },
-    { id:'study',       name:'Study / Office' },
-    { id:'garden',      name:'Garden / Balcony' },
-    { id:'outside',     name:'Outside (errands, gym, café, park…)' },
-];
-
-// Day index 0=Mon … 6=Sun
-const DAY_KEYS = ['mon','tue','wed','thu','fri','sat','sun'];
-const DAY_NAMES = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+// SOLO_ROOMS, DAY_KEYS, DAY_NAMES now in schedule/schedule_data.js
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Auto-update schedule system with 60s delay to prevent concurrent updates
 // ─────────────────────────────────────────────────────────────────────────────
-const _AUTO_UPDATE_CONFIG = {
-    minDelayMs: 60000,  // 60 seconds between auto-updates
-    lastUpdateTime: 0,  // timestamp of last auto-update
-    updateQueue: [],    // queue of bots waiting to update
-    isProcessing: false // whether currently processing queue
-};
+// _AUTO_UPDATE_CONFIG now in schedule/schedule_data.js
 
 // Track current pregnancy stage for each bot to detect changes
 const _botPregnancyStage = new Map(); // botId -> {stage: string, week: number}
@@ -270,6 +251,26 @@ function _pickScheduleVariant(bot, variants) {
     return flatten(variants.normal);
 }
 
+// Expose globally
+// Expose all schedule functions globally
+window._pickScheduleVariant = _pickScheduleVariant;
+window._getCurrentPregnancyStage = _getCurrentPregnancyStage;
+window._hasPregnancyStageChanged = _hasPregnancyStageChanged;
+window._processAutoUpdateQueue = _processAutoUpdateQueue;
+window._forceScheduleUpdate = _forceScheduleUpdate;
+window._queueAutoUpdate = _queueAutoUpdate;
+window._buildScheduleCharContext = _buildScheduleCharContext;
+window._buildSchedulePrompt = _buildSchedulePrompt;
+window._buildTimelineFromSchedule = _buildTimelineFromSchedule;
+window._getScheduleVariantKey = _getScheduleVariantKey;
+window._autoUpdateScheduleIfNeeded = _autoUpdateScheduleIfNeeded;
+window.addMins = addMins;
+window._isPersonalActivity = _isPersonalActivity;
+window._resolveDisplayRoom = _resolveDisplayRoom;
+window._resolveRoom = _resolveRoom;
+window._sanitizeDayList = _sanitizeDayList;
+window.toMins = toMins;
+
 // ── Build character + state context for schedule prompt ──────────────────────
 function _buildScheduleCharContext(bot, groupRooms) {
     const cd = bot?.cycleData;
@@ -433,81 +434,7 @@ Return ONLY one compact JSON object. No markdown, no explanation.`;
 // Bot 0 → key[0], Bot 1 → key[1], ... cycles if fewer keys than bots.
 
 // _keyForBot() moved to schedule/ modules
-
-
-
-
-// _repairScheduleJSON() moved to schedule/ modules
-\]])/g, '$1');
-
-    // Remove JS comments
-    s = s.replace(/\/\/[^\r\n]*/g, '');
-    s = s.replace(/\/\*[\s\S]*?\*\//g, '');
-
-    // Fix unescaped control chars inside string values
-    let fixed = '';
-    let inStr = false, esc = false;
-    for (let i = 0; i < s.length; i++) {
-        const c = s[i];
-        if (esc) { fixed += c; esc = false; continue; }
-        if (c === '\\') { fixed += c; esc = true; continue; }
-        if (c === '"') { inStr = !inStr; fixed += c; continue; }
-        if (inStr) {
-            if (c === '\n') { fixed += '\\n'; continue; }
-            if (c === '\r') { fixed += '\\r'; continue; }
-            if (c === '\t') { fixed += '\\t'; continue; }
-        }
-        fixed += c;
-    }
-    s = fixed;
-
-    // Fix unquoted property values
-    s = s.replace(/"(\w+)"\s*:\s*(?!true|false|null|-?\d|"|\[|\{)([A-Za-z_][\w_-]*)/g, '"$1": "$2"');
-
-    // Fix single quotes
-    s = s.replace(/'([^']*)'/g, '"$1"');
-
-    // Attempt 1: direct parse
-    try { return JSON.parse(s); } catch(e1) {
-        const pos = parseInt((e1.message.match(/position (\d+)/)||[])[1]) || 0;
-        logError('_repairScheduleJSON', 'pos=' + pos + ' ctx=[' + s.substring(Math.max(0,pos-40),pos+40) + ']');
-
-        // Attempt 2: rebuild by skipping broken top-level keys
-        try {
-            const topKeys = [];
-            const topRx = /"(\w+)"\s*:/g;
-            let km;
-            while ((km = topRx.exec(s)) !== null) topKeys.push({key: km[1], pos: km.index});
-            let rebuilt = '{', first = true;
-            for (let ki = 0; ki < topKeys.length; ki++) {
-                const kStart = topKeys[ki].pos;
-                const kEnd = ki + 1 < topKeys.length ? topKeys[ki+1].pos : s.length - 1;
-                const chunk = s.substring(kStart, kEnd).replace(/,\s*$/, '');
-                try {
-                    JSON.parse('{' + chunk + '}');
-                    rebuilt += (first ? '' : ',') + chunk;
-                    first = false;
-                } catch(skip) { logError('_repairScheduleJSON', 'skipped key: ' + topKeys[ki].key); }
-            }
-            rebuilt += '}';
-            const r2 = JSON.parse(rebuilt);
-            logError('_repairScheduleJSON', 'Recovered by key rebuild');
-            return r2;
-        } catch(e2) { /* fall through */ }
-
-        // Attempt 3: truncate at last valid closing brace
-        for (let i = s.length - 1; i > 100; i--) {
-            if (s[i] === '}') {
-                try { return JSON.parse(s.substring(0, i + 1)); } catch(e3) { continue; }
-            }
-        }
-        throw new Error('JSON repair failed: ' + e1.message);
-    }
-}
-
-// Known variant keys - used to detect if AI returned nested variants or a flat single schedule
-const KNOWN_VARIANT_KEYS = ['normal','trimester1','trimester2','trimester3','overdue','postpartum_newborn','parasite_implantation','parasite_feeding','parasite_growth','parasite_maturation','parasite_emergence'];
-const KNOWN_SCHED_FIELDS = ['wake','breakfast','lunch','dinner','sleep'];
+// KNOWN_VARIANT_KEYS, KNOWN_SCHED_FIELDS now in schedule/schedule_data.js
 
 // ── _sanitizeScheduleRooms ────────────────────────────────────────────────────
 // Replaces any room_id in a parsed variants object that doesn't exist in validRooms
