@@ -40,11 +40,12 @@ function saveBot() {
         grpDynBio: null,
         ageStartDay: Math.floor(Math.random() * 365),
         socialRelation: '',
-        familyRelation: '',
+        familyRelation: 'None',
         emotionalRelation: ''
     };
     
     bots.push(bot);
+    saveFirstData(bot); // Save initial state for reset functionality
     saveBots();
     renderBotList();
     closeScreen('sc-create');

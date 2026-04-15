@@ -581,65 +581,8 @@ const GENETIC_TRAITS = [
 
   // ── Male traits ──
   {name:'Alpha Seed',        category:'genetic', gender:'male', desc:'Offspring inherit dominant genetic traits; conception chance moderately boosted (+20%)'},
-  {name:'Breeding Stamina',  category:'genetic', gender:'male', desc:'No refractory period - body recovers instantly, capable of multiple consecutive encounters'},
   {name:'Hyper-Virility',    category:'genetic', gender:'male', opposite:'Infertile', desc:'Sperm count perpetually at peak - conception chance doubled, never depleted'},
-  {name:'Imprint Bond',      category:'genetic', gender:'male', desc:'After first conception with a partner, biology permanently bonds to them - exclusive drive intensifies'},
-  {name:'Knotting',          category:'genetic', gender:'male', desc:'Biological lock during climax extends duration involuntarily; partner cannot separate'},
   {name:'Rut Cycle',         category:'genetic', gender:'male', desc:'Periodic testosterone surges (every ~21 days): aggression, libido, and dominance spike severely'},
-  {name:'Scent Dominance',   category:'genetic', gender:'male', desc:'Pheromone signature overwhelms partner\'s decision-making at close range; primal attraction'},
-
-  // ── Social & Interpersonal traits (merged from disadvantages) ──
-  {name:'Socially Awkward',     category:'genetic', gender:'neutral', desc:'Struggles with normal social interactions'},
-  {name:'Chronic Liar',         category:'genetic', gender:'neutral', desc:'Cannot stop lying even when unnecessary'},
-  {name:'Gossiper',             category:'genetic', gender:'neutral', desc:'Cannot keep secrets, always spreads rumours'},
-  {name:'Pathological Jealousy', category:'genetic', gender:'neutral', desc:'Overwhelmed by jealousy in all relationships'},
-  {name:'Attention Seeker',     category:'genetic', gender:'neutral', desc:'Craves constant validation and spotlight'},
-  {name:'People Pleaser',       category:'genetic', gender:'neutral', desc:'Cannot say no, sacrifices own needs for others'},
-  {name:'Passive-Aggressive',   category:'genetic', gender:'neutral', desc:'Expresses hostility through indirect behavior'},
-  {name:'Guilt-Tripper',        category:'genetic', gender:'neutral', desc:'Manipulates others through guilt and self-pity'},
-  {name:'Gaslighter',           category:'genetic', gender:'neutral', desc:'Makes others question their own reality'},
-  {name:'Martyr Complex',       category:'genetic', gender:'neutral', desc:'Portrays themselves as a constant victim or sacrificial figure'},
-  {name:'Savior Complex',       category:'genetic', gender:'neutral', desc:'Obsessively tries to fix others\' lives uninvited'},
-  {name:'Codependent',          category:'genetic', gender:'neutral', desc:'Emotionally dependent to an unhealthy degree'},
-  {name:'Fear of Abandonment',  category:'genetic', gender:'neutral', desc:'Extreme anxiety about being left or rejected'},
-
-  // ── Mental & Emotional traits (merged from disadvantages) ──
-  {name:'Chronic Procrastinator', category:'genetic', gender:'neutral', desc:'Always delays tasks until the last possible moment'},
-  {name:'Overthinking',          category:'genetic', gender:'neutral', desc:'Obsessively analyzes every situation, never acts'},
-  {name:'Catastrophizer',        category:'genetic', gender:'neutral', desc:'Always assumes the worst possible outcome'},
-  {name:'Perfectionism Paralysis', category:'genetic', gender:'neutral', desc:'Paralyzed by fear of imperfection, nothing gets done'},
-  {name:'Emotionally Volatile',  category:'genetic', gender:'neutral', desc:'Rapid, unpredictable emotional swings'},
-  {name:'Emotional Shutdown',    category:'genetic', gender:'neutral', desc:'Shuts down completely when overwhelmed'},
-  {name:'Emotionally Unavailable', category:'genetic', gender:'neutral', desc:'Cannot form deep emotional connections'},
-  {name:'Inferiority Complex',   category:'genetic', gender:'neutral', desc:'Persistent feeling of being lesser than others'},
-  {name:'Superiority Complex',   category:'genetic', gender:'neutral', desc:'Delusional belief in their own superiority'},
-  {name:'Self-Loathing',        category:'genetic', gender:'neutral', desc:'Deep-seated hatred of themselves'},
-  {name:'Self-Destructive',     category:'genetic', gender:'neutral', desc:'Unconsciously sabotages their own happiness'},
-  {name:'Hypochondriac',        category:'genetic', gender:'neutral', desc:'Convinced they are constantly ill or dying'},
-  {name:'Paranoid',             category:'genetic', gender:'neutral', desc:'Trusts no one, sees threats in everything'},
-  {name:'Neurotic',             category:'genetic', gender:'neutral', desc:'Perpetually anxious and emotionally unstable'},
-
-  // ── Behavioral traits (merged from disadvantages) ──
-  {name:'Hot-Headed',           category:'genetic', gender:'neutral', desc:'Loses temper at the slightest provocation'},
-  {name:'Crybaby',              category:'genetic', gender:'neutral', desc:'Bursts into tears at the smallest setbacks'},
-  {name:'Doormat',              category:'genetic', gender:'neutral', desc:'Allows everyone to mistreat them without resistance'},
-  {name:'Clumsy',               category:'genetic', gender:'neutral', desc:'Prone to accidents, always breaking things'},
-  {name:'Forgetful',            category:'genetic', gender:'neutral', desc:'Cannot retain important information'},
-  {name:'Easily Distracted',    category:'genetic', gender:'neutral', desc:'Loses focus within seconds'},
-  {name:'Impulsive Spender',    category:'genetic', gender:'neutral', desc:'Cannot control spending, always broke'},
-  {name:'Compulsive Gambler',   category:'genetic', gender:'neutral', desc:'Addicted to games of chance'},
-  {name:'Workaholic',           category:'genetic', gender:'neutral', desc:'Sacrifices all personal life for work'},
-  {name:'Recklessly Honest',    category:'genetic', gender:'neutral', desc:'Says hurtful truths without any filter'},
-  {name:'Overly Trusting',      category:'genetic', gender:'neutral', desc:'Believes everyone, gets exploited easily'},
-  {name:'Commitment-Phobic',    category:'genetic', gender:'neutral', desc:'Flees from any long-term relationship or promise'},
-  {name:'Addictive Personality', category:'genetic', gender:'neutral', desc:'Easily forms addictions to substances or behaviors'},
-  {name:'Control Freak',        category:'genetic', gender:'neutral', desc:'Must control every situation or person around them'},
-  {name:'Narcissistic Tendencies', category:'genetic', gender:'neutral', desc:'Excessive self-focus, lacks empathy for others'},
-
-  // ── Unique / Character traits (merged from disadvantages) ──
-  {name:'Manipulation Through Tears', category:'genetic', gender:'neutral', desc:'Uses crying as a weapon to get what they want'},
-  {name:'Chronic Victim',       category:'genetic', gender:'neutral', desc:'Always positions themselves as the wronged party'},
-  {name:'Obsessive Planner',    category:'genetic', gender:'neutral', desc:'Cannot handle anything unplanned, spirals in chaos'},
 ];
 
 // Combine for backward compatibility
@@ -659,30 +602,15 @@ PERSONALITY_TRAITS.forEach(t => {
 // Trait conflict pairs - picking one hides the other
 const TRAIT_CONFLICTS = [
   ['Dominant',          'Submissive'],
-  ['Born Dominant',     'Submissive'],
-  ['Apex Predator Aura','Submissive'],
   ['Cold Blooded',      'Romantic'],
-  ['Cold Blooded',      'Affectionate'],
   ['Stoic',             'Explosive'],
   ['Possessive',        'Independent'],
   ['Possessive',        'Diplomatic'],
-  ['Disciplined',       'Reckless'],
   ['Disciplined',       'Impulsive'],
-  ['Arrogant',          'Humble'],
-  ['Confident',         'Pessimistic'],
-  ['Chivalrous',        'Manipulative'],
-  ['Generous',          'Vindictive'],
-  ['Pessimistic',       'Idealistic'],
-  ['Independent',       'Clingy'],
-  ['Secretive',         'Diplomatic'],
-  ['Yandere',           'Diplomatic'],
-  ['Calculating',       'Impulsive'],
-  ['Calculating',       'Reckless'],
   ['Parasite Host',     'Always Overdue'],
   ['Parasite Host',     'Always Multiples'],
   ['Monster Pregnancy', 'Parasite Host'],
   ['Hyper-Virility',    'Infertile'],
-  ['Rut Cycle',         'Breeding Stamina'],
 ];
 
 // Build a quick lookup: traitName → Set of conflicting trait names
@@ -967,6 +895,93 @@ function removeTraitChip(btn) {
 // ── Appearance Tag System ─────────────────────────────────────────────────────
 let _appTags = [];
 
+// Predefined appearance tags organized by categories
+const PREDEFINED_APP_TAGS = {
+  height: null, // Generated randomly 140-200cm
+  hair: ['blonde hair', 'brown hair', 'black hair', 'red hair', 'auburn hair', 'gray hair', 'white hair', 'dyed hair', 'short hair', 'long hair', 'wavy hair', 'curly hair', 'straight hair', 'ponytail', 'bun', 'bangs'],
+  eyes: ['blue eyes', 'brown eyes', 'green eyes', 'hazel eyes', 'gray eyes', 'amber eyes', 'dark eyes', 'light eyes'],
+  skin: ['fair skin', 'light skin', 'medium skin', 'olive skin', 'tan skin', 'dark skin', 'pale skin', 'golden skin', 'bronzed skin', 'deep brown skin', 'ebony skin', 'porcelain skin', 'rose skin', 'alabaster skin', 'warm beige skin', 'caramel skin', 'mocha skin'],
+  build: ['slender', 'athletic', 'curvy', 'petite', 'tall', 'average', 'muscular', 'lean', 'fit', 'hourglass', 'willowy', 'slim', 'thin', 'plump', 'plus size', 'voluptuous', 'stocky', 'sturdy', 'broad-shouldered', 'long-legged', 'compact', 'boyish figure'],
+  features: ['freckles', 'dimples', 'beauty mark', 'high cheekbones', 'defined jawline', 'full lips', 'long eyelashes', 'rosy cheeks', 'collarbones', 'tattoos', 'piercings', 'scars', 'glasses', 'contacts'],
+  style: ['casual', 'formal', 'sporty', 'elegant', 'bohemian', 'vintage', 'modern', 'minimalist', 'chic', 'preppy', 'edgy', 'classic']
+};
+
+// Generate random appearance from predefined tags (no AI needed)
+function generateRandomAppearance() {
+  const randomTags = [];
+  // Generate random height between 140-200cm
+  const randomHeight = Math.floor(Math.random() * (200 - 140 + 1)) + 140;
+  randomTags.push(randomHeight + 'cm');
+  // Always include hair color
+  randomTags.push(PREDEFINED_APP_TAGS.hair[Math.floor(Math.random() * PREDEFINED_APP_TAGS.hair.filter(t => t.includes('hair')).length)]);
+  // Always include eye color
+  randomTags.push(PREDEFINED_APP_TAGS.eyes[Math.floor(Math.random() * PREDEFINED_APP_TAGS.eyes.length)]);
+  // Always include skin tone
+  randomTags.push(PREDEFINED_APP_TAGS.skin[Math.floor(Math.random() * PREDEFINED_APP_TAGS.skin.length)]);
+  // Always include build
+  randomTags.push(PREDEFINED_APP_TAGS.build[Math.floor(Math.random() * PREDEFINED_APP_TAGS.build.length)]);
+  // Randomly add 1-2 features
+  const numFeatures = Math.floor(Math.random() * 2) + 1;
+  for (let i = 0; i < numFeatures; i++) {
+    const feature = PREDEFINED_APP_TAGS.features[Math.floor(Math.random() * PREDEFINED_APP_TAGS.features.length)];
+    if (!randomTags.includes(feature)) randomTags.push(feature);
+  }
+  // Randomly add style
+  if (Math.random() > 0.3) {
+    const style = PREDEFINED_APP_TAGS.style[Math.floor(Math.random() * PREDEFINED_APP_TAGS.style.length)];
+    if (!randomTags.includes(style)) randomTags.push(style);
+  }
+  return randomTags;
+}
+
+// Roll appearance using predefined tags (no AI)
+function rollAppearanceFromTags(btn) {
+  diceSpin(btn);
+  _appTags = [];
+  const randomTags = generateRandomAppearance();
+  randomTags.forEach(tag => {
+    if (!_appTags.includes(tag)) _appTags.push(tag);
+  });
+  renderAppTags();
+  setDiceLoading(btn, false);
+}
+
+// Render predefined tag suggestions
+function renderAppTagSuggestions() {
+  const wrap = document.getElementById('app-suggestions-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  
+  // Flatten all tags into a single array (excluding height which is random)
+  const allTags = [];
+  Object.entries(PREDEFINED_APP_TAGS).forEach(([category, tags]) => {
+    if (category === 'height' || !tags) return; // Skip height (random) and null values
+    tags.forEach(tag => {
+      if (!allTags.includes(tag)) allTags.push(tag);
+    });
+  });
+  
+  // Render clickable suggestion chips
+  allTags.forEach(tag => {
+    const chip = document.createElement('span');
+    chip.className = 'app-tag';
+    chip.style.background = '#1a1a1a';
+    chip.style.borderColor = '#333';
+    chip.style.color = '#888';
+    chip.style.fontSize = '11px';
+    chip.style.padding = '3px 8px';
+    chip.style.cursor = 'pointer';
+    chip.textContent = tag;
+    chip.onclick = () => {
+      if (!_appTags.includes(tag)) {
+        _appTags.push(tag);
+        renderAppTags();
+      }
+    };
+    wrap.appendChild(chip);
+  });
+}
+
 function renderAppTags() {
   const wrap = document.getElementById('app-tags-wrap');
   const hidden = document.getElementById('bot-app');
@@ -1056,6 +1071,7 @@ function initAppTags(existingText) {
     }
   }
   renderAppTags();
+  renderAppTagSuggestions();
   const inp = document.getElementById('app-tag-input');
   if (inp) inp.value = '';
 }

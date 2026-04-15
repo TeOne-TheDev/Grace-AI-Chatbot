@@ -15,7 +15,7 @@ function saveBot() {
         age: document.getElementById('bot-age') ? (document.getElementById('bot-age').value.trim() || '') : '',
         career: document.getElementById('bot-career') ? (document.getElementById('bot-career').value.trim() || '') : '',
         socialRelation: document.getElementById('bot-social-relation') ? (document.getElementById('bot-social-relation').value.trim() || '') : '',
-        familyRelation: document.getElementById('bot-family-relation') ? (document.getElementById('bot-family-relation').value.trim() || '') : '',
+        familyRelation: document.getElementById('bot-family-relation') ? (document.getElementById('bot-family-relation').value.trim() || 'None') : 'None',
         emotionalRelation: document.getElementById('bot-emotional-relation') ? (document.getElementById('bot-emotional-relation').value.trim() || '') : '',
         year: document.getElementById('bot-year') ? (document.getElementById('bot-year').value.trim() || '') : '',
         country: document.getElementById('bot-country') ? (document.getElementById('bot-country').value.trim() || '') : '',
@@ -31,7 +31,7 @@ function saveBot() {
         personaId: document.getElementById('bot-persona-id')?.value || '',
         series: (document.getElementById('bot-series')?.value || '').trim(),
         schedule: null,
-        virtualMinutes: 9 * 60,
+        virtualMinutes: Math.floor(Math.random() * 365) * 1440 + 9 * 60, // Random day (0-364), 9:00 AM
         ageStartDay: Math.floor(Math.random() * 365),
         dynBio: {},
         geneticTraits: (typeof selectedTraits !== 'undefined' && selectedTraits.size) ? [...selectedTraits.keys()] : [],
@@ -50,6 +50,7 @@ function saveBot() {
     }
 
     bots.unshift(newBot);
+    saveFirstData(newBot); // Save initial state for reset functionality
     saveBots();
     renderBotList();
     closeScreen('sc-create');
@@ -58,7 +59,7 @@ function saveBot() {
     const ageEl = document.getElementById('bot-age'); if(ageEl) ageEl.value = '';
     const careerEl = document.getElementById('bot-career'); if(careerEl) careerEl.value = '';
     const socialRelEl = document.getElementById('bot-social-relation'); if(socialRelEl) socialRelEl.value = '';
-    const familyRelEl = document.getElementById('bot-family-relation'); if(familyRelEl) familyRelEl.value = '';
+    const familyRelEl = document.getElementById('bot-family-relation'); if(familyRelEl) familyRelEl.value = 'None';
     const emotionalRelEl = document.getElementById('bot-emotional-relation'); if(emotionalRelEl) emotionalRelEl.value = '';
     const yearEl = document.getElementById('bot-year'); if(yearEl) yearEl.value = '';
     const countryEl = document.getElementById('bot-country'); if(countryEl) countryEl.value = '';

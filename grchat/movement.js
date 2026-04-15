@@ -303,11 +303,17 @@ function checkGroupScheduleMilestones(grp) {
         // Skip if already has a pending move
         if (grp._pendingSchedMove && grp._pendingSchedMove.botId === bot.id) continue;
         
+        // GUARD: Don't schedule-move bots that are actively in conversation
+        // Check if user is in same room AND has chatted with this bot recently
+        const botRoom = grp.memberRooms[bot.id] || getBotBedroomId(bot.id);
+        const userInSameRoom = grp.userRoom === botRoom;
+        const secsSinceChat = (Date.now() - (bot.lastChatted || 0)) / 1000;
+        if (userInSameRoom && secsSinceChat < 300) continue; // 5 min conversation guard
+        
         // Check cooldown (in virtual minutes)
         const coolUntil = grp._schedMoveCooldown[bot.id] || 0;
         if (bot.virtualMinutes < coolUntil) continue;
 
-        const botRoom = grp.memberRooms[bot.id] || getBotBedroomId(bot.id);
         const tod = getTimeOfDay(bot);
 
         // Find active schedule slot
@@ -470,9 +476,13 @@ function syncMemberRoomsToSchedule(grp) {
     members.forEach(bot => {
         if (!bot.schedule) return;
         if (lockActive && gathered.includes(bot.id)) return;
-        // ONLY guard: don't move a bot that is actively in conversation (chatted within last 2 min)
+        // GUARD: don't move a bot that is actively in conversation (chatted within last 5 min)
         const secsSinceChat = (Date.now() - (bot.lastChatted || 0)) / 1000;
-        if (secsSinceChat < 120) return;
+        // Also check if user is in same room - if so, extend guard
+        const botRoom = grp.memberRooms[bot.id] || getBotBedroomId(bot.id);
+        const userInSameRoom = userRoom === botRoom;
+        if (userInSameRoom && secsSinceChat < 300) return; // 5 min if actively talking
+        if (secsSinceChat < 120) return; // 2 min minimum
         // GUARD: Respect intentional moves for 30 min
         const overrideUntil = grp._schedRoomOverrideUntil?.[bot.id] || 0;
         if (Date.now() < overrideUntil) return;

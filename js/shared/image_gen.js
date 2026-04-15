@@ -242,7 +242,7 @@ SHOT:
 - ${bgDesc}
 
 ART STYLE (use exactly these words, do not change or add to them):
-${_styleDesc}
+${styleDesc}
 
 RULES:
 1. Start with the art style words above

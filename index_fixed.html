@@ -192,7 +192,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .thought-btn:active{background:#222;border-color:#888}
 /* Inline thought bubble */
 .thought-inline{background:#1a0a2e;border:1px solid #3b1a5a;border-radius:12px;padding:10px 14px;margin-top:8px;font-size:13px;color:#c084fc;font-style:italic;line-height:1.55;position:relative;max-width:100%}
-.thought-inline::before{content:'\uD83D\uDCAD';position:absolute;top:-10px;left:12px;font-size:14px;background:#1a0a2e;padding:0 4px;border-radius:50%}
 .thought-inline-loading{color:#7c3aed;font-size:12px;opacity:0.7}
 .thought-inline-err{color:#ef4444;font-size:12px}
 /* Thought modal */
@@ -235,6 +234,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .bio-text-collapsed{display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
 .bio-text-expanded{display:block;cursor:pointer}
 .bio-expand-hint{font-size:10px;color:#0084ff;margin-top:3px;cursor:pointer;display:block;-webkit-user-select:none;user-select:none}
+
+.memory-log-refresh-btn{background:#1a0b2e;border:1px solid #7c3aed66;color:#a855f7;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .2s}
+.memory-log-refresh-btn:hover{background:#2a1b3e;border-color:#a855f7;color:#c084fc;transform:translateY(-1px)}
+.memory-log-refresh-btn:active{transform:scale(0.95)}
+.memory-log-refresh-btn i{font-size:10px}
 
 .location-badge{display:none;font-size:10px;font-weight:700;color:rgba(255,255,255,0.85);background:rgba(0,0,0,0.45);border-radius:10px;padding:2px 9px;white-space:nowrap;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);letter-spacing:0.2px;width:fit-content;max-width:200px;overflow:hidden;text-overflow:ellipsis;line-height:1.6;text-transform:capitalize}
 .grp-location-inline{display:none;font-size:10px;font-weight:700;color:rgba(255,255,255,0.8);text-shadow:0 1px 4px rgba(0,0,0,0.8);width:100%;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.4;text-transform:capitalize}
@@ -850,14 +854,14 @@ kbd{font-family:inherit}
                     </label>
                 </div>
                 <div class="settings-item" onclick="toggleNpcMode(event)" id="menu-npc-item">
-                    <i class="fas fa-user-secret"></i> NPC Characters
+                    <i class="fas fa-user-secret"></i> NPC Characters <span style="background:#a855f7;padding:2px 6px;border-radius:4px;font-size:9px;color:#fff;margin-left:6px">WIP</span>
                     <label class="toggle-switch" style="margin-left:auto;pointer-events:none">
                         <input type="checkbox" id="menu-npc-toggle" style="pointer-events:none">
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
                 <div class="settings-item" onclick="toggleRealisticEncounter(event)">
-                    <i class="fas fa-star"></i> Realistic Encounter
+                    <i class="fas fa-star"></i> Realistic Encounter <span style="background:#a855f7;padding:2px 6px;border-radius:4px;font-size:9px;color:#fff;margin-left:6px">WIP</span>
                     <label class="toggle-switch" style="margin-left:auto;pointer-events:none">
                         <input type="checkbox" id="life-events-toggle" id2="schedule-events-toggle" style="pointer-events:none" checked>
                         <span class="toggle-slider"></span>
@@ -932,8 +936,8 @@ kbd{font-family:inherit}
                         <div class="bio-detail-text" id="p-age">-</div>
                     </div>
                     <div class="bio-detail-box" style="flex:2;margin-bottom:0" id="p-rel-box">
-                        <div class="bio-detail-label">Relationship</div>
-                        <div class="bio-detail-text" id="p-rel">-</div>
+                        <div class="bio-detail-label">Relationships</div>
+                        <div class="bio-detail-text" id="p-rel" style="font-size:11px">-</div>
                     </div>
                 </div>
                 <div class="bio-detail-box" id="p-career-box" style="margin-bottom:6px;display:none">
@@ -966,7 +970,7 @@ kbd{font-family:inherit}
                 </div>
                 <div class="bio-detail-box" id="p-states-box" style="display:none">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-                        <div class="bio-detail-label" style="margin-bottom:0">🏷️ States</div>
+                        <div class="bio-detail-label" style="margin-bottom:0">🏷️ Status</div>
                         <button onclick="openStatePicker()" style="background:#1a0e00;border:1px solid #f59e0b44;color:#f59e0b;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer">+ Edit</button>
                     </div>
                     <div id="p-states-chips" style="display:flex;flex-wrap:wrap;gap:5px;padding-top:2px"></div>
@@ -1337,8 +1341,10 @@ kbd{font-family:inherit}
                 </div>
                 <!-- Big Avatar holder -->
                 <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:0">
-                    <img id="av-preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Ccircle cx='45' cy='45' r='45' fill='%23111111'/%3E%3C/svg%3E" class="p-av-preview" style="background:#111;width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid var(--border);cursor:pointer" onclick="document.getElementById('av-upload-input').click()" title="Avatar preview">
+                    <img id="av-preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Ccircle cx='45' cy='45' r='45' fill='%23111111'/%3E%3C/svg%3E" class="p-av-preview" style="background:#111;width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid var(--border);cursor:zoom-in" onclick="openAvatarZoom()" title="Click to zoom. Use upload button to change.">
                     <input type="hidden" id="bot-av-url">
+                    <input type="file" id="av-upload-input" accept="image/*" style="display:none" onchange="handleAvatarUpload(this)">
+                    <button onclick="document.getElementById('av-upload-input').click()" style="margin-top:6px;background:#1a0b2e;border:1px solid #3b156b;color:#a855f7;border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer"><i class="fas fa-upload"></i> Upload</button>
                 </div>
             </div>
         </div>
@@ -1418,9 +1424,13 @@ kbd{font-family:inherit}
             <div style="display:flex;gap:6px;align-items:center">
                 <input id="app-tag-input" class="form-control" style="flex:1;padding:9px 12px;font-size:13px;border-radius:10px" placeholder='e.g. 170cm, blue eyes, white hair...' onkeydown="handleAppTagKey(event)" autocomplete="off">
                 <button onclick="addAppTag()" style="background:#0084ff22;border:1px solid #0084ff55;color:#0084ff;border-radius:10px;padding:9px 12px;font-size:13px;cursor:pointer;white-space:nowrap;font-weight:bold">+ Add</button>
-                <button class="dice-btn" onclick="rollAppearance(this)" title="Random appearance">🎲</button>
+                <button class="dice-btn" onclick="rollAppearanceFromTags(this)" title="Random appearance (no AI)">🎲</button>
             </div>
             <div style="font-size:10px;color:#555;margin-top:5px">Press <kbd style="background:#222;border:1px solid #444;border-radius:3px;padding:1px 4px;font-size:10px">Enter</kbd> or comma to add. Click tag to remove.</div>
+            <div id="app-tag-suggestions" style="display:none;margin-top:8px;padding:8px;background:var(--input-bg);border-radius:8px;border:1px solid var(--border)">
+                <div style="font-size:11px;color:var(--text-sub);margin-bottom:6px;font-weight:bold">Quick Select:</div>
+                <div id="app-suggestions-wrap" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+            </div>
             <textarea id="bot-app" style="display:none"></textarea>
         </div>
 
@@ -1520,7 +1530,7 @@ kbd{font-family:inherit}
             <div id="portrait-edit-section" style="display:none;margin-top:10px">
                 <div style="font-size:12px;color:var(--text-sub);margin-bottom:6px">✏️ Edit portrait (enter request then click Regenerate)</div>
                 <div style="display:flex;gap:8px;align-items:flex-start">
-                    <textarea id="portrait-edit-prompt" class="form-control" placeholder="Ex: Add sunset lighting, change outfit, glasses..." style="min-height:60px;font-size:13px;flex:1" oninput="autoResize(this)"></textarea>
+                    <textarea id="portrait-edit-prompt" class="form-control" placeholder="Ex: Add sunset lighting, change outfit, glasses..." style="min-height:90px;font-size:13px;flex:1" oninput="autoResize(this)"></textarea>
                     <button id="btn-regen-portrait" onclick="regeneratePortraitWithEdit()" style="background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0"><i class="fas fa-sync-alt"></i><br>Regenerate</button>
                 </div>
             </div>
@@ -1676,34 +1686,42 @@ kbd{font-family:inherit}
             <div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:12px">
 
                 <div style="background:#0a0a18;border:1px solid #1e1b4b;border-radius:10px;padding:12px">
-                    <div style="font-size:12px;font-weight:bold;color:#818cf8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px">🤖 AI Model</div>
+                    <div style="font-size:12px;font-weight:bold;color:#818cf8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px">🔑 Getting Your API Keys</div>
                     <div style="font-size:12px;color:var(--text-sub);line-height:1.6">
-                        Choose which AI powers your chatbot. Access it via the <b style="color:var(--text-main)">⚙️ menu inside a chat → Select AI model</b>.<br>
-                        • <b style="color:#22c55e">Llama 3.1 8B</b> - Fast, lightweight, good for casual chat.<br>
-                        • <b style="color:#f97316">Kimi K2</b> - Deep reasoning, emotionally nuanced, best for roleplay.<br>
-                        • <b style="color:#a855f7">Qwen3 32B</b> - Strong reasoning, great for complex scenarios.<br>
-                        • <b style="color:#3b82f6">GPT-OSS 20B</b> - OpenAI compact model, balanced quality.<br>
-                        • <b style="color:#555">Llama 4 Maverick</b> - Currently offline.
+                        Grace requires API keys to connect to AI services. Here's how to get them:
                     </div>
                 </div>
 
-                <div style="background:#0a1200;border:1px solid #1a2e00;border-radius:10px;padding:12px">
-                    <div style="font-size:12px;font-weight:bold;color:#86efac;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px">🌡️ Temperature (Creativity)</div>
-                    <div style="font-size:12px;color:var(--text-sub);line-height:1.6">
-                        Controls how creative or predictable the AI's replies are. Set it in the <b style="color:var(--text-main)">model picker</b>.<br>
-                        • <b style="color:#86efac">0.1–0.5</b> - Focused, consistent, less surprising. Good for realistic slow-burn.<br>
-                        • <b style="color:#fbbf24">0.8–1.2</b> - Balanced. Recommended for most roleplay.<br>
-                        • <b style="color:#f87171">1.5–2.0</b> - Wild and unpredictable. Fun but may go off-script.
+                <div style="background:#0d1a0d;border:1px solid #1a3a1a;border-radius:10px;padding:12px;margin-left:8px">
+                    <div style="font-size:12px;font-weight:bold;color:#4ade80;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">🚀 Groq API Key (For Chat AI)</div>
+                    <div style="font-size:12px;color:var(--text-sub);line-height:1.7">
+                        <b style="color:#4ade80">Step 1:</b> Go to <a href="https://console.groq.com" target="_blank" style="color:#4ade80;text-decoration:underline">console.groq.com</a><br>
+                        <b style="color:#4ade80">Step 2:</b> Click "Sign Up" and create a free account (email or Google)<br>
+                        <b style="color:#4ade80">Step 3:</b> Verify your email address<br>
+                        <b style="color:#4ade80">Step 4:</b> Log in and go to "API Keys" section<br>
+                        <b style="color:#4ade80">Step 5:</b> Click "Create API Key" and copy the key<br>
+                        <b style="color:#4ade80">Step 6:</b> Paste it in the "Groq API Keys" field below<br>
+                        <div style="margin-top:6px;padding:6px;background:#1a2e1a;border-radius:6px;font-size:11px;color:#86efac">
+                            💡 <b>Free tier:</b> $5/month credit. Add multiple keys to extend usage.
+                        </div>
                     </div>
                 </div>
 
-                <div style="background:#120a00;border:1px solid #2e1600;border-radius:10px;padding:12px">
-                    <div style="font-size:12px;font-weight:bold;color:#fb923c;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px">🎭 Realistic Encounter</div>
-                    <div style="font-size:12px;color:var(--text-sub);line-height:1.6">
-                        Toggle inside a chat via <b style="color:var(--text-main)">⚙️ → Realistic Encounter</b>.<br>
-                        When ON, the character spontaneously reacts to her day - a sudden memory, a sound outside, a text from a friend, a holiday mood. These short life moments appear naturally between your exchanges, making the chat feel alive and less like a script.
+                <div style="background:#1a0d1a;border:1px solid #3a1a3a;border-radius:10px;padding:12px;margin-left:8px">
+                    <div style="font-size:12px;font-weight:bold;color:#e879f9;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">🎨 Pollinations Key (For Images)</div>
+                    <div style="font-size:12px;color:var(--text-sub);line-height:1.7">
+                        <b style="color:#e879f9">Step 1:</b> Go to <a href="https://enter.pollinations.ai" target="_blank" style="color:#e879f9;text-decoration:underline">enter.pollinations.ai</a><br>
+                        <b style="color:#e879f9">Step 2:</b> Click "Get API Key" or "Sign In"<br>
+                        <b style="color:#e879f9">Step 3:</b> Create an account with email<br>
+                        <b style="color:#e879f9">Step 4:</b> Go to Dashboard → API Keys<br>
+                        <b style="color:#e879f9">Step 5:</b> Generate a new key and copy it<br>
+                        <b style="color:#e879f9">Step 6:</b> Paste it in the "Pollinations Keys" field below<br>
+                        <div style="margin-top:6px;padding:6px;background:#2e1a2e;border-radius:6px;font-size:11px;color:#f0abfc">
+                            💡 <b>Optional:</b> Flux Schnell works without a key (free). A key unlocks higher quality models.
+                        </div>
                     </div>
                 </div>
+
             </div>
         </details>
         
@@ -1758,12 +1776,28 @@ kbd{font-family:inherit}
                 <option value="Swedish">🇸🇪 Swedish</option>
             </select>
             <div style="font-size:11px;color:var(--text-sub);margin-top:4px">The AI will always respond in this language, regardless of what language you type in.</div>
+            <div style="margin-top:8px;padding:8px 10px;background:#2a1a1a;border:1px solid #5c2a2a;border-radius:8px;font-size:11px;color:#f87171">
+                ⚠️ <b>Warning:</b> Non-English languages are still in development. Shouldn't pick any language other than English. Try it if you want!
+            </div>
         </div>
-
 
         <button class="btn-primary" onclick="saveSettings()" id="btn-save-settings"><span id="lbl-save-settings">Save Settings</span></button>
 
-        
+        <div style="display:flex;gap:10px;margin-top:12px">
+            <a href="https://ko-fi.com/heone1123" target="_blank" rel="noopener" style="text-decoration:none;flex:1">
+                <button style="width:100%;background:linear-gradient(135deg,#ff5f6d,#ffc371);color:#fff;border:none;padding:12px;border-radius:12px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .2s,box-shadow .2s">
+                    <span style="font-size:18px">☕</span>
+                    <span>Support on Ko-fi</span>
+                </button>
+            </a>
+            <a href="https://github.com/TeOne-TheDev/Grace-AI-Chatbot" target="_blank" rel="noopener" style="text-decoration:none;flex:1">
+                <button style="width:100%;background:linear-gradient(135deg,#24292e,#586069);color:#fff;border:none;padding:12px;border-radius:12px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .2s,box-shadow .2s">
+                    <span style="font-size:18px"><i class="fab fa-github"></i></span>
+                    <span>GitHub</span>
+                </button>
+            </a>
+        </div>
+
         <div style="margin-top:18px;background:var(--input-bg);border:1px solid var(--border);border-radius:12px;padding:14px">
             <div style="font-size:13px;font-weight:bold;color:var(--text-sub);margin-bottom:4px">💾 Backup & Restore</div>
             <div style="font-size:11px;color:var(--text-sub);margin-bottom:12px">Save all character data (avatar, portrait, chat history, health cycle) to JSON file. Chat illustration images (illust) are not included.</div>
@@ -1777,8 +1811,12 @@ kbd{font-family:inherit}
 
         <div style="margin-top:18px;background:#1a0a0a;border:1px solid #7f1d1d;border-radius:12px;padding:14px">
             <div style="font-size:13px;font-weight:bold;color:#fca5a5;margin-bottom:4px">Danger Zone</div>
-            <div style="font-size:11px;color:#fca5a5;margin-bottom:12px">Delete all chatbots, group chats, folders, and generated chat images. API keys, personas, and app settings will stay.</div>
-            <button onclick="deleteAllChatData()" style="width:100%;background:#7f1d1d;color:#fff;border:1px solid #ef444466;padding:11px;border-radius:9px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><i class="fas fa-trash-alt"></i> Delete Everything</button>
+            
+            <div style="font-size:11px;color:#fca5a5;margin-bottom:8px">Delete chatbots, groups, folders & images only. API keys and settings stay.</div>
+            <button onclick="deleteAllChatData()" style="width:100%;background:#7f1d1d;color:#fff;border:1px solid #ef444466;padding:11px;border-radius:9px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:12px"><i class="fas fa-trash-alt"></i> Delete Chat Data</button>
+            
+            <div style="font-size:11px;color:#fca5a5;margin-bottom:8px;border-top:1px solid #3a1a1a;padding-top:12px"><b>FACTORY RESET:</b> Deletes ALL data including API keys, personas, and settings.</div>
+            <button onclick="deleteEverything()" style="width:100%;background:#2a0505;color:#fca5a5;border:1px solid #ef444488;padding:11px;border-radius:9px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><i class="fas fa-radiation"></i> Delete Everything (Factory Reset)</button>
         </div>
     </div>
 </div>
@@ -1800,13 +1838,13 @@ kbd{font-family:inherit}
         <div style="font-size:13px;font-weight:bold;color:var(--text-sub);margin-bottom:10px">Select members (min 2):</div>
         <div id="member-pick-list"></div>
         <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 12px;background:var(--input-bg);border-radius:12px;border:1px solid var(--border)">
-            <i class="fas fa-id-card" style="color:#a855f7"></i>
+            <i class="fas fa-copy" style="color:#22c55e"></i>
             <div style="flex:1">
-                <div style="font-size:13px;font-weight:bold">Use Dynamic Bio</div>
-                <div style="font-size:11px;color:var(--text-sub)">ON = use updated story bio · OFF = use original base bio</div>
+                <div style="font-size:13px;font-weight:bold">Copy Solo Chat State</div>
+                <div style="font-size:11px;color:var(--text-sub)">Copy solo bio/personality/relation as initial group state</div>
             </div>
             <label class="toggle-switch" style="pointer-events:auto">
-                <input type="checkbox" id="grp-use-dynbio" checked title="Use dynamic bio">
+                <input type="checkbox" id="grp-copy-solo" checked title="Copy solo chat state">
                 <span class="toggle-slider"></span>
             </label>
         </div>
@@ -1938,7 +1976,7 @@ kbd{font-family:inherit}
                     <i class="fas fa-sync-alt" style="color:#a855f7"></i> <span style="color:#d0a0ff">Dynamic Bio Sync</span>
                 </div>
                 <div class="settings-item" onclick="toggleGroupRealisticEncounter(event)">
-                    <i class="fas fa-star"></i> Realistic Encounter
+                    <i class="fas fa-star"></i> Realistic Encounter <span style="background:#a855f7;padding:2px 6px;border-radius:4px;font-size:9px;color:#fff;margin-left:6px">WIP</span>
                     <label class="toggle-switch" style="margin-left:auto;pointer-events:none">
                         <input type="checkbox" id="grp-life-events-toggle" checked>
                         <span class="toggle-slider"></span>
@@ -1995,7 +2033,7 @@ kbd{font-family:inherit}
             <div onclick="toggleGrpStoryLog()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;margin-bottom:6px">
                 <div style="font-size:10px;font-weight:bold;color:#a855f7;text-transform:uppercase;letter-spacing:.5px">📖 Story Log</div>
                 <div style="display:flex;align-items:center;gap:6px">
-                    <button onclick="event.stopPropagation();refreshGrpStoryLog()" style="background:#1a0b2e;border:1px solid #7c3aed44;color:#a855f7;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    <button onclick="event.stopPropagation();refreshGrpStoryLog()" style="background:#1a0b2e;border:1px solid #7c3aed66;color:#a855f7;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .2s"><i class="fas fa-sync-alt"></i> Refresh</button>
                     <span id="grp-story-log-chevron" style="font-size:13px;color:var(--text-sub);transition:transform .25s">▾</span>
                 </div>
             </div>
@@ -2079,8 +2117,8 @@ kbd{font-family:inherit}
                     <div class="bio-detail-text" id="gp-age">-</div>
                 </div>
                 <div class="bio-detail-box" style="flex:2;margin-bottom:0">
-                    <div class="bio-detail-label">Relationship <span style="font-size:9px;color:#9333ea">(in group)</span></div>
-                    <div class="bio-detail-text" id="gp-rel">-</div>
+                    <div class="bio-detail-label">Relationships <span style="font-size:9px;color:#9333ea">(in group)</span></div>
+                    <div class="bio-detail-text" id="gp-rel" style="font-size:11px">-</div>
                 </div>
             </div>
             <div class="bio-detail-box">
@@ -2106,7 +2144,7 @@ kbd{font-family:inherit}
             </div>
             <div class="bio-detail-box" id="gp-states-box" style="display:none">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-                    <div class="bio-detail-label" style="margin-bottom:0">🏷️ States</div>
+                    <div class="bio-detail-label" style="margin-bottom:0">🏷️ Status</div>
                 </div>
                 <div id="gp-states-chips" style="display:flex;flex-wrap:wrap;gap:5px"></div>
             </div>
@@ -2133,7 +2171,7 @@ kbd{font-family:inherit}
                 <div style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;margin-bottom:6px" onclick="toggleGpMemoryLog()">
                     <div style="font-size:11px;font-weight:bold;color:#a855f7;text-transform:uppercase;letter-spacing:0.5px">📖 Story Memory</div>
                     <div style="display:flex;align-items:center;gap:6px">
-                        <button onclick="event.stopPropagation();refreshGpMemoryLog()" style="background:#1a0b2e;border:1px solid #7c3aed44;color:#a855f7;border-radius:8px;padding:3px 8px;font-size:10px;cursor:pointer;display:flex;align-items:center;gap:4px"><i class="fas fa-sync-alt"></i> Refresh</button>
+                        <button onclick="event.stopPropagation();refreshGpMemoryLog()" style="background:#1a0b2e;border:1px solid #7c3aed66;color:#a855f7;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .2s"><i class="fas fa-sync-alt"></i> Refresh</button>
                         <span id="gp-memory-log-chevron" style="font-size:13px;color:var(--text-sub);transition:transform .25s">▾</span>
                     </div>
                 </div>
@@ -2382,6 +2420,15 @@ kbd{font-family:inherit}
     </div>
 </div>
 
+<!-- ── Avatar Zoom Modal ── -->
+<div id="av-zoom-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9200;align-items:center;justify-content:center;flex-direction:column;gap:20px" onclick="if(event.target===this)closeAvatarZoom()">
+    <img id="av-zoom-img" src="" style="max-width:80vw;max-height:70vh;border-radius:12px;object-fit:contain;box-shadow:0 20px 60px rgba(0,0,0,0.8)">
+    <div style="display:flex;gap:12px">
+        <button onclick="document.getElementById('av-upload-input').click()" style="background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:8px"><i class="fas fa-upload"></i> Upload New</button>
+        <button onclick="closeAvatarZoom()" style="background:#1a1a1a;color:#888;border:1px solid #333;padding:12px 24px;border-radius:12px;font-size:14px;cursor:pointer">Close</button>
+    </div>
+</div>
+
 <!-- ── Update Avatar confirm modal ── -->
 <div id="update-av-confirm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:9100;align-items:center;justify-content:center" onclick="if(event.target===this)_closeUpdateAvConfirm()">
     <div style="background:#111;border:1px solid #2a2a2a;border-radius:20px;padding:24px 20px;max-width:320px;width:90%;box-shadow:0 12px 40px rgba(0,0,0,0.85)">
@@ -2405,6 +2452,8 @@ kbd{font-family:inherit}
 <script src="js/repro/symptoms.js"></script>
 <script src="js/repro/body.js"></script>
 <script src="js/repro/context.js"></script>
+<script src="js/repro/delivery_progress.js"></script>
+<script src="js/repro/delivery_ui.js"></script>
 <script src="js/shared.js" charset="UTF-8"></script>
 <script src="js/shared/traits.js" charset="UTF-8"></script>
 <script src="js/shared/image_gen.js"></script>
@@ -2428,6 +2477,7 @@ kbd{font-family:inherit}
 <script src="grchat/group_system.js"></script>
 <script src="grchat/ai_detect.js"></script>
 <script src="grchat/settings.js"></script>
+<script src="core/ui_helpers.js"></script>
 <script src="grchat/chat.js"></script>
 
 
@@ -2436,8 +2486,8 @@ kbd{font-family:inherit}
 <div id="state-picker-overlay" class="trait-picker-overlay" onclick="closeStatePicker()" style="display:none">
     <div class="trait-picker-panel" onclick="event.stopPropagation()" style="border-color:#f59e0b44">
         <div class="trait-picker-hdr">
-            <div style="font-size:14px;font-weight:bold;color:#f59e0b;margin-bottom:8px">🏷️ Character States</div>
-            <input class="trait-picker-search" id="state-picker-search" placeholder="Search states..." oninput="filterStatePicker(this.value)">
+            <div style="font-size:14px;font-weight:bold;color:#f59e0b;margin-bottom:8px">🏷️ Character Status</div>
+            <input class="trait-picker-search" id="state-picker-search" placeholder="Search status..." oninput="filterStatePicker(this.value)">
         </div>
         <div class="trait-picker-body" id="state-picker-body"></div>
         <div style="padding:12px 16px;border-top:1px solid var(--border)">

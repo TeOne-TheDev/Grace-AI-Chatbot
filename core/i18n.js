@@ -56,7 +56,8 @@ const T = {
 };
 
 function getLang() {
-    return safeGetItem('ai_lang', 'English');
+    // Language picker removed - always use English
+    return 'English';
 }
 
 function t(key) {

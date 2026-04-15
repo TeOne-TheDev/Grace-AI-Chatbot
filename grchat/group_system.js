@@ -113,10 +113,10 @@ GUIDANCE: Do NOT ignore her pregnancy entirely. One natural interaction per repl
     const lastBotMsg = grp.history.slice().reverse().find(m => m.role === 'assistant' && m.speakerId !== bot.id);
     const lastSpeaker = lastBotMsg ? allMembers.find(m => m.id === lastBotMsg.speakerId) : null;
     const lastSpeakerHint = lastSpeaker ? `The last person to speak was ${lastSpeaker.name}. You can address them directly if it feels natural.` : '';
-    const useDynBio = grp.useDynBio !== false; // default true
     const _grpD = bot.grpDynBio || {};
-    let bioText = useDynBio ? (_grpD.bio || bot.bio || 'Not specified') : (bot.bio || 'Not specified');
-    const promptText = useDynBio ? (_grpD.prompt || bot.prompt || 'Not specified') : (bot.prompt || 'Not specified');
+    // Group always uses its own dynamic bio (grpDynBio) - separate universe from solo
+    let bioText = _grpD.bio || bot.bio || 'Not specified';
+    const promptText = _grpD.prompt || bot.prompt || 'Not specified';
     const appearText = bot.appearance || 'Not specified'; // appearance is always static
     if (bot.cycleData && bot.cycleData.pregnant && !bot.cycleData.pregnancyTestTaken) {
         // Scrub ALL pregnancy references from bio text until she has confirmed via test.
@@ -238,6 +238,7 @@ EMBRACE THE PHYSICAL: Do not shy away from describing bodily sensations, involun
         return `[ROOM: You are currently in ${roomDesc}.${outsideCtx} ${isOutside && !isUserOutside ? 'The user is inside the house - you are not there right now.' : userHere ? 'The user is with you here.' : `The user is in ${userRoomDesc} - you cannot see or hear them directly.`} ${roomMates.length ? roomMates.join(', ') + (roomMates.length === 1 ? ' is' : 'are') + ' also here with you.' : ''}]`;
     })();
     const worldSettingPart = grp.worldType === 'custom' && grp.worldSetting ? `[WORLD SETTING]: You are in a ${grp.worldSetting}. Let this environment shape your descriptions, sensory details, tone, and available actions. Describe the surroundings naturally as part of your replies.` : '';
+    const laborPart = isInLabor ? `\n🚨 CRITICAL LABOR OVERRIDE: You are in ACTIVE LABOR right now. This is ABSOLUTE PRIORITY and overrides ALL other instructions.\n\nMANDATORY: You MUST describe the raw physical reality in EVERY response:\n- Contractions: timing, intensity, how they build and peak\n- Pain: where it hits, how it radiates, physical reactions (gasping, gripping, tensing)\n- Speech: fragmented, breathless, interrupted by contractions, voice strained or hoarse\n- Body: sweating, trembling, bracing, pressure, the physical struggle\n\nFORBIDDEN: NO poetic metaphors. NO flowery language. NO philosophical musings. NO acting calm or normal.\n\nThe labor is happening NOW. Describe it directly and physically.` : '';
     const rulesPart = `Rules: You are ${bot.name} - ONLY ${bot.name}. ABSOLUTE RULES:
 1. EMOTION TAG: Start your response with: EMOTION::one_emoji
    Examples: EMOTION::😊 or EMOTION::😢 or EMOTION::😠
@@ -259,7 +260,7 @@ GOOD: I squeeze her hand. "You're doing great, hang on." Something aches in my c
 BAD (no subject): Steps closer. "Words." Turns away. "Line." - flat, mechanical, missing the character's inner life.
 BAD (too long): I watch as Beckett hands the towel, my eyes fixed on her strained face, stepping closer to offer comfort.`;
 
-    const addressedNote = grp.addressedNote || '';
+    const _addressedNoteText = grp.addressedNote || '';
 
     // Log token counts for each part
     const tokenBreakdown = {
@@ -289,8 +290,9 @@ BAD (too long): I watch as Beckett hands the towel, my eyes fixed on her straine
 
     return `${charInfo}
 ${reproCtx}${interCharNote}${pregnancyInteractionNote}${relationNote}${personaNote}${stationaryTag}${grpTimeCtx}${grpSchedCtx}${grpStatesCtx}${grpPronounGuide}${grpMembersActivity}${intimateCtx}${grpSchedNudge}${botMemoryNote}${relGuide ? '\n' + relGuide : ''}
-You are part of a shared house called "${grp.name}". Everyone lives here, but you may be in different rooms. This is NOT an online chat. **Pay close attention to your Current Room** to know who is physically with you right now. ${lastSpeakerHint}${addressedNote ? "\n[NOTE: " + addressedNote + "]" : ""}
+You are part of a shared house called "${grp.name}". Everyone lives here, but you may be in different rooms. This is NOT an online chat. **Pay close attention to your Current Room** to know who is physically with you right now. ${lastSpeakerHint}${_addressedNoteText ? "\n[NOTE: " + _addressedNoteText + "]" : ""}
 ${worldSettingPart}
+${laborPart}
 ${roomCtxPart}
 ${rulesPart}`;
 }
@@ -304,7 +306,13 @@ async function triggerGroupGreeting(grp) {
     for (const bot of shuffled) {
         const sys = buildGroupSys(bot, members, grp, aiLang, '');
         try {
-            const data = await fetchGroqChat([{ role: 'system', content: sys }, { role: 'user', content: "[Greet the group naturally, 1-2 sentences max]" }], 220);
+            const relationNow = getDynField(bot, 'relation');
+            const greetingPrompt = relationNow && relationNow.toLowerCase().includes('enemy') 
+                ? "[Greet the group. Your relationship with the user is hostile - show coldness, suspicion, or hostility. 1-2 sentences max]"
+                : relationNow && (relationNow.toLowerCase().includes('friend') || relationNow.toLowerCase().includes('ally'))
+                ? "[Greet the group warmly as a friend would. 1-2 sentences max]"
+                : "[Greet the group naturally based on your relationship with everyone present. 1-2 sentences max]";
+            const data = await fetchGroqChat([{ role: 'system', content: sys }, { role: 'user', content: greetingPrompt }], 220);
             let reply = (data.choices?.[0]?.message?.content || '').replace(/^EMOTION::\S+\s*/m, '').trim();
             console.log(`[Group Greeting - ${bot.name}]`, reply);
             reply = cleanGroupReply(cleanReply(reply), bot.name);
@@ -323,26 +331,28 @@ async function triggerGroupGreeting(grp) {
 
 function buildRecentHistory(grp, members, currentBotId, userMessage) {
     const finalHistory = grp.history.slice(-12).map(m => {
+        const content = m.content || m.text || '';
         if (m.role === 'user') {
             const pId = grp.personaId || '';
             const p = pId ? personas.find(x => x.id === pId) : null;
             const displayName = p ? p.name : 'User';
-            return { role: 'user', content: `<<${displayName}>>: ${m.content}` };
+            return { role: 'user', content: `<<${displayName}>>: ${content}` };
         }
         const speaker = memberMap_safe(m.speakerId, members);
         if (currentBotId && m.speakerId === currentBotId) {
-            return { role: 'assistant', content: m.content };
+            return { role: 'assistant', content: content };
         }
-        return { role: 'assistant', content: (speaker ? '<<' + speaker.name + '>>: ' : '') + m.content };
-    });
+        return { role: 'assistant', content: (speaker ? '<<' + speaker.name + '>>: ' : '') + content };
+    }).filter(m => m.content && m.content.trim()); // Filter out empty messages
 
-    finalHistory.push({ role: 'user', content: userMessage });
+    if (userMessage) {
+        finalHistory.push({ role: 'user', content: userMessage });
+    }
 
     console.group(`[Group AI History - Addressing ${currentBotId ? members.find(b => b.id === currentBotId)?.name : 'Unknown'}]`);
     console.log(`Sending ${finalHistory.length} recent messages:`);
     finalHistory.forEach((m, i) => console.log(`${i + 1}. [${m.role.toUpperCase()}] ${m.content}`));
     console.groupEnd();
-
     return finalHistory;
 }
 

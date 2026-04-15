@@ -58,27 +58,30 @@ Return ONLY the name of the character who should respond. No explanation, no ext
     }
 }
 
-function grpFullSyncDynBio(grpId) {
+// NOTE: Solo and Group chat are now COMPLETELY SEPARATE universes
+// No automatic sync between them. grpDynBio is independent from dynBio.
+
+// Copy solo data to group ONCE during initial group creation (user choice)
+function grpCopySoloToGroupInitial(grpId, botId) {
     const grp = groups.find(g => g.id === grpId);
-    if (!grp) return;
+    const bot = bots.find(b => b.id === botId);
+    if (!grp || !bot) return;
     
-    grp.memberIds.forEach(id => {
-        const bot = bots.find(b => b.id === id);
-        if (bot) {
-            grpSyncMemberBio(grpId, bot.id);
-        }
-    });
-    
-    saveGroups();
+    if (!bot.grpDynBio) bot.grpDynBio = {};
+    // Copy solo dynBio as initial state for group
+    bot.grpDynBio = { ...bot.dynBio };
+    saveBots();
 }
 
+// Manual sync for specific bot (user-initiated only)
 function grpSyncMemberBio(grpId, botId) {
     const grp = groups.find(g => g.id === grpId);
     const bot = bots.find(b => b.id === botId);
     if (!grp || !bot) return;
     
-    if (!grp.grpDynBio) grp.grpDynBio = {};
-    grp.grpDynBio[botId] = { ...bot.dynBio };
+    // Group bio now syncs from GROUP chat history only, not from solo
+    // This is handled by grpFullSyncDynBio in grchat/chat.js
+    console.log('[Group Bio] Manual sync requested for', bot.name, '- group chat bio is independent from solo');
 }
 
 function grpUpdateMemberPortrait(grpId, botId, portraitUrl) {

@@ -42,79 +42,25 @@ const PERSONALITY_TRAITS = [
 ];
 
 const GENETIC_TRAITS = [
-  {name:'Always Lactate', category:'genetic', desc:'Breasts produce milk constantly, not just during pregnancy - may leak unexpectedly'},
-  {name:'High Fertility', category:'genetic', desc:'Conception happens easily and often; pregnancy is highly likely from unprotected intimacy'},
-  {name:'Multiple Births', category:'genetic', desc:'Pregnancies frequently result in twins, triplets, or more'},
-  {name:'Sensitive Body', category:'genetic', desc:'Extremely responsive to touch; even casual contact feels intense'},
-  {name:'Fast Metabolism', category:'genetic', desc:'Burns energy quickly; needs to eat frequently to maintain stamina'},
-  {name:'Slow Metabolism', category:'genetic', desc:'Energy burns slowly; gains weight easily, loses it with difficulty'},
-  {name:'High Pain Tolerance', category:'genetic', desc:'Can endure physical discomfort without showing it much'},
-  {name:'Low Pain Tolerance', category:'genetic', desc:'Physical discomfort is overwhelming; even minor pain is disabling'},
-  {name:'Strong Immune System', category:'genetic', desc:'Rarely gets sick; recovers quickly from illness'},
-  {name:'Weak Immune System', category:'genetic', desc:'Gets sick easily; recovery takes longer than normal'},
-  {name:'Night Owl', category:'genetic', desc:'Naturally more alert at night; morning is difficult'},
-  {name:'Early Bird', category:'genetic', desc:'Naturally wakes early; morning is peak energy time'},
-  {name:'Light Sleeper', category:'genetic', desc:'Wakes easily from small disturbances; needs quiet to sleep well'},
-  {name:'Deep Sleeper', category:'genetic', desc:'Sleeps through almost anything; hard to wake up'},
-  {name:'Warm Blooded', category:'genetic', desc:'Comfortable in cold; overheats easily in heat'},
-  {name:'Cold Blooded', category:'genetic', desc:'Comfortable in heat; feels cold easily in normal temperatures'},
-  {name:'High Libido', category:'genetic', desc:'Strong, frequent physical desires; intimacy is a constant need'},
-  {name:'Low Libido', category:'genetic', desc:'Minimal physical desire; intimacy is occasional at most'},
-  {name:'Quick Recovery', category:'genetic', desc:'Heals from physical exertion or injury faster than normal'},
-  {name:'Slow Recovery', category:'genetic', desc:'Takes long to recover from physical exertion or injury'},
-  
-  // Social & Interpersonal traits (merged from disadvantages)
-  {name:'Socially Awkward', category:'genetic', desc:'Struggles with normal social interactions'},
-  {name:'Chronic Liar', category:'genetic', desc:'Cannot stop lying even when unnecessary'},
-  {name:'Gossiper', category:'genetic', desc:'Cannot keep secrets, always spreads rumours'},
-  {name:'Pathological Jealousy', category:'genetic', desc:'Overwhelmed by jealousy in all relationships'},
-  {name:'Attention Seeker', category:'genetic', desc:'Craves constant validation and spotlight'},
-  {name:'People Pleaser', category:'genetic', desc:'Cannot say no, sacrifices own needs for others'},
-  {name:'Passive-Aggressive', category:'genetic', desc:'Expresses hostility through indirect behavior'},
-  {name:'Guilt-Tripper', category:'genetic', desc:'Manipulates others through guilt and self-pity'},
-  {name:'Gaslighter', category:'genetic', desc:'Makes others question their own reality'},
-  {name:'Martyr Complex', category:'genetic', desc:'Portrays themselves as a constant victim or sacrificial figure'},
-  {name:'Savior Complex', category:'genetic', desc:'Obsessively tries to fix others\' lives uninvited'},
-  {name:'Codependent', category:'genetic', desc:'Emotionally dependent to an unhealthy degree'},
-  {name:'Fear of Abandonment', category:'genetic', desc:'Extreme anxiety about being left or rejected'},
-  
-  // Mental & Emotional traits (merged from disadvantages)
-  {name:'Chronic Procrastinator', category:'genetic', desc:'Always delays tasks until the last possible moment'},
-  {name:'Overthinking', category:'genetic', desc:'Obsessively analyzes every situation, never acts'},
-  {name:'Catastrophizer', category:'genetic', desc:'Always assumes the worst possible outcome'},
-  {name:'Perfectionism Paralysis', category:'genetic', desc:'Paralyzed by fear of imperfection, nothing gets done'},
-  {name:'Emotionally Volatile', category:'genetic', desc:'Rapid, unpredictable emotional swings'},
-  {name:'Emotional Shutdown', category:'genetic', desc:'Shuts down completely when overwhelmed'},
-  {name:'Emotionally Unavailable', category:'genetic', desc:'Cannot form deep emotional connections'},
-  {name:'Inferiority Complex', category:'genetic', desc:'Persistent feeling of being lesser than others'},
-  {name:'Superiority Complex', category:'genetic', desc:'Delusional belief in their own superiority'},
-  {name:'Self-Loathing', category:'genetic', desc:'Deep-seated hatred of themselves'},
-  {name:'Self-Destructive', category:'genetic', desc:'Unconsciously sabotages their own happiness'},
-  {name:'Hypochondriac', category:'genetic', desc:'Convinced they are constantly ill or dying'},
-  {name:'Paranoid', category:'genetic', desc:'Trusts no one, sees threats in everything'},
-  {name:'Neurotic', category:'genetic', desc:'Perpetually anxious and emotionally unstable'},
-  
-  // Behavioral traits (merged from disadvantages)
-  {name:'Hot-Headed', category:'genetic', desc:'Loses temper at the slightest provocation'},
-  {name:'Crybaby', category:'genetic', desc:'Bursts into tears at the smallest setbacks'},
-  {name:'Doormat', category:'genetic', desc:'Allows everyone to mistreat them without resistance'},
-  {name:'Clumsy', category:'genetic', desc:'Prone to accidents, always breaking things'},
-  {name:'Forgetful', category:'genetic', desc:'Cannot retain important information'},
-  {name:'Easily Distracted', category:'genetic', desc:'Loses focus within seconds'},
-  {name:'Impulsive Spender', category:'genetic', desc:'Cannot control spending, always broke'},
-  {name:'Compulsive Gambler', category:'genetic', desc:'Addicted to games of chance'},
-  {name:'Workaholic', category:'genetic', desc:'Sacrifices all personal life for work'},
-  {name:'Recklessly Honest', category:'genetic', desc:'Says hurtful truths without any filter'},
-  {name:'Overly Trusting', category:'genetic', desc:'Believes everyone, gets exploited easily'},
-  {name:'Commitment-Phobic', category:'genetic', desc:'Flees from any long-term relationship or promise'},
-  {name:'Addictive Personality', category:'genetic', desc:'Easily forms addictions to substances or behaviors'},
-  {name:'Control Freak', category:'genetic', desc:'Must control every situation or person around them'},
-  {name:'Narcissistic Tendencies', category:'genetic', desc:'Excessive self-focus, lacks empathy for others'},
-  
-  // Unique / Character traits (merged from disadvantages)
-  {name:'Manipulation Through Tears', category:'genetic', desc:'Uses crying as a weapon to get what they want'},
-  {name:'Chronic Victim', category:'genetic', desc:'Always positions themselves as the wronged party'},
-  {name:'Obsessive Planner', category:'genetic', desc:'Cannot handle anything unplanned, spirals in chaos'},
+  // ── Female traits ──
+  {name:'Always Lactate',    category:'genetic', gender:'female', desc:'Breasts perpetually produce milk regardless of pregnancy'},
+  {name:'Always Multiples',  category:'genetic', gender:'female', desc:'Every pregnancy produces multiple babies (2-6, equal chance)'},
+  {name:'Always Overdue',    category:'genetic', gender:'female', opposite:'Early Birth', desc:'Never goes into labor before week 43, extends to week 45'},
+  {name:'Early Birth',       category:'genetic', gender:'female', opposite:'Parasite Host', desc:'High risk of premature labor - can go into labor unexpectedly as early as week 28'},
+  {name:'Heat Cycle',        category:'genetic', gender:'female', desc:'Enhanced fertility with shorter, more frequent cycles'},
+  {name:'Monster Pregnancy', category:'genetic', gender:'female', desc:'Body carries supernatural offspring with physical transformations'},
+  {name:'Parasite Host',     category:'genetic', gender:'female', opposite:'Early Birth', desc:'Body hosts alien/demonic parasite for offspring'},
+  {name:'Perfect Incubation',category:'genetic', gender:'female', desc:'Pregnancy progresses 2x faster than normal (affects Normal & Monster, not Parasite)'},
+  {name:'Ultra-fertile',     category:'genetic', gender:'female', opposite:'Infertile', desc:'Conception happens with ease; nearly guaranteed on ovulation day'},
+
+  // ── Neutral traits (apply to both) ──
+  {name:'Breeding Instinct', category:'genetic', gender:'neutral', desc:'Primal biological drive to conceive dominates all other instincts'},
+  {name:'Infertile',         category:'genetic', gender:'neutral', opposite:'Ultra-fertile', desc:'Drastically reduced fertility - conception is extremely difficult'},
+
+  // ── Male traits ──
+  {name:'Alpha Seed',        category:'genetic', gender:'male', desc:'Offspring inherit dominant genetic traits; conception chance moderately boosted (+20%)'},
+  {name:'Hyper-Virility',    category:'genetic', gender:'male', opposite:'Infertile', desc:'Sperm count perpetually at peak - conception chance doubled, never depleted'},
+  {name:'Rut Cycle',         category:'genetic', gender:'male', desc:'Periodic testosterone surges (every ~21 days): aggression, libido, and dominance spike severely'},
 ];
 
 const ALL_TRAITS = [...PERSONALITY_TRAITS, ...GENETIC_TRAITS];
@@ -142,9 +88,10 @@ const TRAIT_CONFLICTS = [
   ['Ambitious', 'Content'],
   ['Creative', 'Conventional'],
   ['Playful', 'Serious'],
-  ['Always Lactate', 'Low Libido'],
-  ['High Fertility', 'Low Libido'],
-  ['High Libido', 'Low Libido'],
+  ['Parasite Host', 'Always Overdue'],
+  ['Parasite Host', 'Always Multiples'],
+  ['Monster Pregnancy', 'Parasite Host'],
+  ['Hyper-Virility', 'Infertile'],
 ];
 
 const TRAIT_CONFLICT_MAP = {};

@@ -135,9 +135,32 @@ function closeGroupChat() {
 function clearGroupChat() {
     if (!curGroupId) return;
     const grp = groups.find(g => g.id === curGroupId);
-    if (!grp || !confirm('Clear all group chat history?')) return;
+    if (!grp || !confirm('Clear all group chat history?\n\n⚠️ All member characters will be reset to their initial state (appearance, measurements, cycle data, etc.)')) return;
     grp.history = [];
+    
+    // Reset group persona lock so user can repick after clearing chat
+    grp.personaLocked = false;
+    
+    // Restore all member bots to their first data
+    const members = grp.memberIds.map(id => bots.find(b => b.id === id)).filter(Boolean);
+    members.forEach(bot => {
+        // Reset chat-related state
+        bot.memorySummary = null;
+        bot.lastSummaryAt = 0;
+        bot.lastSummaryCutoff = 0;
+        bot.kickData = null;
+        bot.virtualDay = 0;
+        bot.virtualMinutes = 540;
+        bot.ageStartDay = 0;
+        bot.dynBio = {};
+        bot.currentEmotion = null;
+        bot.emotionState = null;
+        // Restore first data
+        restoreFirstData(bot);
+    });
+    
     saveGroups();
+    saveBots();
     document.getElementById('grp-chat-container').innerHTML = '';
     triggerGroupGreeting(grp);
 }
@@ -245,7 +268,7 @@ function renderGroupChat() {
         // \uD83D\uDCAD thought button - always shown on each bot's last message
         const thoughtBtn = document.createElement('button');
         thoughtBtn.className = 'thought-btn';
-        thoughtBtn.innerHTML = '\uD83D\uDCAD';
+        thoughtBtn.innerHTML = '💭';
         thoughtBtn.title = 'Inner thoughts';
         const capSpeakerId = msg.speakerId;
         const capHistIdx = histIdx;
@@ -876,6 +899,7 @@ function showGroupMemberBio(botId) {
         _removeGrpDDListener();
         _curGroupProfileBotId = botId;
         const grp = groups.find(g => g.id === curGroupId);
+        // Group bio is COMPLETELY SEPARATE from solo chat - no fallbacks
         const grpD = bot.grpDynBio || {};
 
         document.getElementById('gp-name').textContent = bot.name;
@@ -883,7 +907,13 @@ function showGroupMemberBio(botId) {
         if (genBadge) genBadge.textContent = (bot.gender || 'Unknown') + ' \u00b7 Human';
 
         document.getElementById('gp-age').textContent = bot.age || '\u2014';
-        document.getElementById('gp-rel').textContent = grpD.relation || bot.relation || '\u2014';
+        // Group relation - show social and family (emotional hidden - in development)
+        const relations = [];
+        const socialRel = grpD.socialRelation || bot.socialRelation;
+        const familyRel = grpD.familyRelation || bot.familyRelation;
+        if (socialRel) relations.push(`Social: ${socialRel}`);
+        if (familyRel) relations.push(`Family: ${familyRel}`);
+        document.getElementById('gp-rel').textContent = relations.length ? relations.join(' | ') : (grpD.relation || bot.relation || '\u2014');
         document.getElementById('gp-app').textContent = bot.appearance || '\u2014';
         ['gp-app', 'gp-bio'].forEach(id => {
             const el = document.getElementById(id);
@@ -891,15 +921,16 @@ function showGroupMemberBio(botId) {
             const hint = el ? el.nextElementSibling : null;
             if (hint && hint.classList.contains('bio-expand-hint')) hint.textContent = 'â–¼ Show more';
         });
-        const showDynBio = grp ? grp.useDynBio !== false : true;
-        document.getElementById('gp-bio').textContent = showDynBio ? (grpD.bio || bot.bio || '\u2014') : (bot.bio || '\u2014');
+        // Group bio only from grpDynBio or static - never from solo
+        document.getElementById('gp-bio').textContent = grpD.bio || bot.bio || '\u2014';
 
         // --- NEW: Populate Group Personality & Add Random Button ---
         const gppersonality = document.getElementById('gp-personality');
         const gppersonalityBox = document.getElementById('gp-personality-box');
         if (gppersonality && gppersonalityBox) {
             gppersonalityBox.style.display = 'block';
-            let pText = showDynBio ? (grpD.prompt || bot.prompt || '') : (bot.prompt || '');
+            // Group personality only from grpDynBio or static - never from solo
+            let pText = grpD.prompt || bot.prompt || '';
             const allTraits = bot.disadvantages || [];
 
             // Filter genetic traits out of personality text
@@ -1052,6 +1083,7 @@ function showGroupMemberBio(botId) {
 
         renderGpSchedule(bot);
         renderGpMemoryLog(bot);
+        renderGroupStatesInBio(bot);
         const _gpMemBox = document.getElementById('gp-memory-log-text');
         const _gpMemChev = document.getElementById('gp-memory-log-chevron');
         if (_gpMemBox) { _gpMemBox.style.display = 'none'; }
@@ -1132,39 +1164,17 @@ function renderGroupMemberRepro(bot, grp) {
             }
             document.getElementById('gp-labor-progress').style.display = 'none';
             
-            // Show parasite emergence panel when labor starts (day 12-15)
-            const gpParasitePanel = document.getElementById('gp-parasite-emergence');
-            const gpParasitePanelContent = document.getElementById('gp-parasite-emergence-content');
-            if (cd.laborStarted && gpParasitePanel && gpParasitePanelContent) {
-                gpParasitePanel.style.display = 'block';
-                const emergenceMinutes = getLaborElapsedMinutes(bot, currentGroupMins);
-                const emergenceHours = emergenceMinutes / 60;
-                
-                // Determine emergence stage based on hours since labor started
-                let emergenceStage, emergenceDesc;
-                if (emergenceHours < 1) {
-                    emergenceStage = 'Initial Awakening';
-                    emergenceDesc = 'Parasites beginning to stir. Mild discomfort, strange movements beneath the skin.';
-                } else if (emergenceHours < 3) {
-                    emergenceStage = 'Thrashing';
-                    emergenceDesc = 'Violent internal movement. Parasites fighting to emerge. Contractions intensifying.';
-                } else if (emergenceHours < 6) {
-                    emergenceStage = 'Emergence Imminent';
-                    emergenceDesc = 'Body preparing for emergence. Aphrodisiac flooding system. Peak intensity.';
-                } else {
-                    emergenceStage = 'Critical';
-                    emergenceDesc = 'Emergency state. Parasites about to burst forth. Seek immediate assistance.';
+            // Initialize and show delivery progress panel only (cleaner UI)
+            if (cd.laborStarted) {
+                // Initialize delivery progress if not already done
+                if (!cd.deliveryInProgress && typeof initDeliveryProgress === 'function') {
+                    initDeliveryProgress(bot);
                 }
-
-                gpParasitePanelContent.innerHTML = `
-                    <div style="margin-bottom:4px"><strong>Stage:</strong> ${emergenceStage}</div>
-                    <div style="margin-bottom:4px"><strong>Time in labor:</strong> ${Math.floor(emergenceHours)}h ${Math.floor(emergenceMinutes % 60)}m</div>
-                    <div style="margin-bottom:4px"><strong>Day:</strong> ${parasiteDay}/15</div>
-                    <div style="margin-bottom:4px"><strong>Larvae count:</strong> ${larvaeCount}</div>
-                    <div style="margin-top:6px;padding-top:6px;border-top:1px solid #22c55e44;color:#86efac;font-style:italic">${emergenceDesc}</div>
-                `;
-            } else if (gpParasitePanel) {
-                gpParasitePanel.style.display = 'none';
+                
+                // Render individual delivery progress UI
+                if (typeof renderDeliveryProgress === 'function') {
+                    renderDeliveryProgress(bot);
+                }
             }
             
             return;
@@ -1588,7 +1598,7 @@ function syncNpcToggle() {
     const toggle = document.getElementById('menu-npc-toggle');
     if (!toggle) return;
     const bot = bots.find(b => b.id === curId);
-    toggle.checked = bot ? (bot.npcEnabled !== false) : true;
+    toggle.checked = bot ? (bot.npcEnabled === true) : false;
 }
 
 function toggleNpcMode(e) {
@@ -1596,7 +1606,7 @@ function toggleNpcMode(e) {
     if (!curId) return;
     const bot = bots.find(b => b.id === curId);
     if (!bot) return;
-    bot.npcEnabled = (bot.npcEnabled !== false) ? false : true;
+    bot.npcEnabled = (bot.npcEnabled === true) ? false : true;
     saveBots();
     const toggle = document.getElementById('menu-npc-toggle');
     if (toggle) toggle.checked = bot.npcEnabled;
@@ -3155,7 +3165,12 @@ function setGroupPersona(personaId) {
 function toggleGroupPersonaLock() {
     const grp = groups.find(g => g.id === curGroupId);
     if (!grp) return;
-    grp.personaLocked = !grp.personaLocked;
+    // If already locked, prevent unlocking and show warning
+    if (grp.personaLocked) {
+        showToast('🔒 Persona is permanently locked. You can\'t repick for the best experience.', '#1a0b2e', '#a855f7');
+        return;
+    }
+    grp.personaLocked = true;
     saveGroups();
     _applyGroupPersonaLockUI(grp);
 }
@@ -3208,7 +3223,12 @@ function openGroupPersonaPanel() {
     if (!overlay || !content) return;
     const grp = groups.find(g => g.id === curGroupId);
     if (!grp) { content.innerHTML = '<div style="color:var(--text-sub);font-style:italic;text-align:center;padding:14px">No active group.</div>'; overlay.style.display = 'flex'; return; }
-
+    
+    // If locked, show warning and prevent opening
+    if (grp.personaLocked && grp.personaId) {
+        showToast('🔒 Persona is locked. You can\'t repick for the best experience.', '#1a0b2e', '#a855f7');
+        return;
+    }
 
     const sel = document.getElementById('grp-persona-select');
     if (sel) {
@@ -3252,6 +3272,12 @@ function openPersonaQuickPanel() {
     if (!overlay || !content) return;
     const bot = bots.find(b => b.id === curId);
     const locked = !!(bot && bot.personaLocked);
+    
+    // If locked, show warning and prevent opening
+    if (locked && bot.personaId) {
+        showToast('🔒 Persona is locked. You can\'t repick for the best experience.', '#1a0b2e', '#a855f7');
+        return;
+    }
 
     let selectorHtml = '';
     if (personas.length > 0 || (bot && bot.personaId)) {
@@ -3270,7 +3296,6 @@ function openPersonaQuickPanel() {
             + '<div style="display:flex;gap:6px;align-items:center">'
             + '<select id="solo-persona-select" class="form-control" style="border-color:#3b156b;font-size:13px;padding:8px;flex:1"' + (locked ? ' disabled' : '') + ' onchange="setSoloChatPersona(this.value)"><option value="">- None -</option>' + opts + '</select>'
             + '<button id="solo-persona-lock-btn" onclick="toggleSoloPersonaLock()" title="' + lockTitle + '" style="background:' + lockBg + ';border:1px solid ' + lockBorder + ';color:#b259ff;border-radius:10px;width:38px;height:38px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s">' + lockIcon + '</button>'
-            + '<button class="hint-btn" onclick="showHintsGroup()" ontouchend="showHintsGroup();return false;" title="Hint" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent"><i class="fas fa-lightbulb"></i></button>'
             + '</div>'
             + '<div id="solo-persona-lock-hint" style="font-size:10px;color:var(--text-sub);margin-top:4px;display:' + hintDisplay + '">\uD83D\uDD12 Locked \u2014 tap the lock to change persona.</div>'
             + '</div>';
@@ -3315,7 +3340,12 @@ function setSoloChatPersona(personaId) {
 function toggleSoloPersonaLock() {
     const bot = bots.find(b => b.id === curId);
     if (!bot) return;
-    bot.personaLocked = !bot.personaLocked;
+    // If already locked, prevent unlocking and show warning
+    if (bot.personaLocked) {
+        showToast('🔒 Persona is permanently locked. You can\'t repick for the best experience.', '#1a0b2e', '#a855f7');
+        return;
+    }
+    bot.personaLocked = true;
     saveBots();
     openPersonaQuickPanel();
 }
@@ -3335,6 +3365,21 @@ function _saveFormSnapshot(mode) {
     if (g) snap['bot-gender'] = g.value;
     var img = document.getElementById('bot-img-style');
     if (img) snap['bot-img-style'] = img.value;
+    // save avatar
+    var avUrl = document.getElementById('bot-av-url');
+    if (avUrl) snap['bot-av-url'] = avUrl.value;
+    var avPreview = document.getElementById('av-preview');
+    if (avPreview) snap['av-preview-src'] = avPreview.src;
+    // save portrait/chat background
+    var portraitUrl = document.getElementById('bot-portrait-url');
+    if (portraitUrl) snap['bot-portrait-url'] = portraitUrl.value;
+    var portraitPreview = document.getElementById('portrait-preview');
+    if (portraitPreview) {
+        snap['portrait-preview-src'] = portraitPreview.src;
+        snap['portrait-preview-display'] = portraitPreview.style.display;
+    }
+    var portraitEditSection = document.getElementById('portrait-edit-section');
+    if (portraitEditSection) snap['portrait-edit-display'] = portraitEditSection.style.display;
     // save appearance tags array
     snap['_appTags'] = typeof _appTags !== 'undefined' ? _appTags.slice() : [];
     _formDataByMode[mode] = snap;
@@ -3360,6 +3405,27 @@ function _restoreFormSnapshot(mode) {
     if (g) g.value = empty ? 'Female' : (data['bot-gender'] || 'Female');
     var img = document.getElementById('bot-img-style');
     if (img) img.value = empty ? (mode === 'anime' ? 'anime' : 'photorealism') : (data['bot-img-style'] || 'photorealism');
+
+    // Restore avatar
+    var avUrl = document.getElementById('bot-av-url');
+    if (avUrl) avUrl.value = empty ? '' : (data['bot-av-url'] || '');
+    var avPreview = document.getElementById('av-preview');
+    if (avPreview) avPreview.src = empty 
+        ? "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Ccircle cx='45' cy='45' r='45' fill='%23111111'/%3E%3C/svg%3E"
+        : (data['av-preview-src'] || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Ccircle cx='45' cy='45' r='45' fill='%23111111'/%3E%3C/svg%3E");
+
+    // Restore portrait/chat background
+    var portraitUrl = document.getElementById('bot-portrait-url');
+    if (portraitUrl) portraitUrl.value = empty ? '' : (data['bot-portrait-url'] || '');
+    var portraitPreview = document.getElementById('portrait-preview');
+    if (portraitPreview) {
+        portraitPreview.src = empty ? '' : (data['portrait-preview-src'] || '');
+        portraitPreview.style.display = empty ? 'none' : (data['portrait-preview-display'] || 'none');
+    }
+    var portraitEditSection = document.getElementById('portrait-edit-section');
+    if (portraitEditSection) {
+        portraitEditSection.style.display = empty ? 'none' : (data['portrait-edit-display'] || 'none');
+    }
 
     // Restore appearance tags
     if (typeof initAppTags === 'function') {
@@ -3592,7 +3658,7 @@ function openStatePicker() {
 function closeStatePicker() {
     document.getElementById('state-picker-overlay').style.display = 'none';
     const bot = bots.find(b => b.id === curId);
-    if (bot) { saveBots(); renderStatesInBio(bot); }
+    if (bot) { saveBots(); renderStatesInBio(bot); renderGroupStatesInBio(bot); }
 }
 function filterStatePicker(q) {
     const bot = bots.find(b => b.id === curId);
@@ -3630,6 +3696,30 @@ function renderStatesInBio(bot) {
     if (cd) {
         if (cd.postpartumStartDay != null && !cd.pregnant) { if (!bot.states || !bot.states.includes('postpartum')) autoStates.push('postpartum'); }
         if (cd.pregnant && !cd.birthVirtualDay) { /* pregnancy shown in repro panel */ }
+        if (cd.laborStarted && !cd.birthVirtualDay) { if (!bot.states || !bot.states.includes('in_labor')) autoStates.push('in_labor'); }
+        if (cd.newbornPresent) { if (!bot.states || !bot.states.includes('nursing')) autoStates.push('nursing'); }
+    }
+    const allActive = [...new Set([...(bot.states || []), ...autoStates])];
+    const displayStates = allActive.map(id => ALL_STATES.find(s => s.id === id)).filter(Boolean);
+    if (displayStates.length === 0) { box.style.display = 'none'; return; }
+    box.style.display = '';
+    chips.innerHTML = displayStates.map(s =>
+        `<span style="display:inline-flex;align-items:center;gap:4px;background:${s.bg};border:1px solid ${s.color}55;color:${s.color};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600">${s.icon} ${s.label}</span>`
+    ).join('');
+}
+
+function renderGroupStatesInBio(bot) {
+    const box = document.getElementById('gp-states-box');
+    const chips = document.getElementById('gp-states-chips');
+    if (!box || !chips) return;
+    const activeStates = (bot.states || []).map(id => ALL_STATES.find(s => s.id === id)).filter(Boolean);
+    // Also auto-inject states based on cycleData
+    const cd = bot.cycleData;
+    const autoStates = [];
+    if (cd) {
+        if (cd.postpartumStartDay != null && !cd.pregnant) { if (!bot.states || !bot.states.includes('postpartum')) autoStates.push('postpartum'); }
+        if (cd.pregnant && !cd.birthVirtualDay) { /* pregnancy shown in repro panel */ }
+        if (cd.laborStarted && !cd.birthVirtualDay) { if (!bot.states || !bot.states.includes('in_labor')) autoStates.push('in_labor'); }
         if (cd.newbornPresent) { if (!bot.states || !bot.states.includes('nursing')) autoStates.push('nursing'); }
     }
     const allActive = [...new Set([...(bot.states || []), ...autoStates])];
@@ -3784,13 +3874,13 @@ function openChildBio(childId) {
         <!-- States -->
         ${activeStates.length > 0 ? `<div class="bio-detail-box" style="margin-bottom:8px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-                <div class="bio-detail-label" style="margin-bottom:0">\uD83C\uDFF7\uFE0F States</div>
+                <div class="bio-detail-label" style="margin-bottom:0">\uD83C\uDFF7\uFE0F Status</div>
                 <button onclick="editChildStates('${child.id}')" style="background:#1a0e00;border:1px solid #f59e0b44;color:#f59e0b;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer">+ Edit</button>
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:5px">${statesHtml}</div>
         </div>` : `<div class="bio-detail-box" style="margin-bottom:8px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-                <div class="bio-detail-label" style="margin-bottom:0">\uD83C\uDFF7\uFE0F States</div>
+                <div class="bio-detail-label" style="margin-bottom:0">\uD83C\uDFF7\uFE0F Status</div>
                 <button onclick="editChildStates('${child.id}')" style="background:#1a0e00;border:1px solid #f59e0b44;color:#f59e0b;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer">+ Add</button>
             </div>
             <div style="font-size:11px;color:var(--text-sub);font-style:italic">No active states.</div>
@@ -3948,11 +4038,11 @@ function getReplyMaxTokens() {
 
 function getReplyWordTarget() {
     const l = getReplyLength();
-    if (l === 'short') return 'STRICT 30-40 words. Target 35. Never exceed 40. Cut ruthlessly.';
-    if (l === 'medium') return 'STRICT 55-70 words. Target 62. Never exceed 70.';
-    if (l === 'long') return 'STRICT 80-100 words. Target 90. Never exceed 100.';
-    if (l === 'verylong') return 'STRICT 130-150 words. Target 140. Never exceed 150.';
-    return 'STRICT 55-70 words. Target 62. Never exceed 70.';
+    if (l === 'short') return 'MANDATORY: Reply MUST be 30-40 words MAXIMUM. Count every word. NEVER exceed 40 words. Be concise and cut ruthlessly.';
+    if (l === 'medium') return 'MANDATORY: Reply MUST be 55-70 words MAXIMUM. Count every word. NEVER exceed 70 words.';
+    if (l === 'long') return 'MANDATORY: Reply MUST be 80-100 words MAXIMUM. Count every word. NEVER exceed 100 words.';
+    if (l === 'verylong') return 'MANDATORY: Reply MUST be 130-150 words MAXIMUM. Count every word. NEVER exceed 150 words.';
+    return 'MANDATORY: Reply MUST be 55-70 words MAXIMUM. Count every word. NEVER exceed 70 words.';
 }
 function enforceReplyWordLimit(text) {
     const l = getReplyLength();
@@ -3972,33 +4062,22 @@ function enforceReplyWordLimit(text) {
         const isQuote = i % 2 === 1;
 
         if (isQuote) {
-            // Count words in quote
+            // Count words in quote - don't truncate mid-quote
             const words = part.trim().split(/\s+/).filter(w => w.length > 0);
+            // Only add complete quotes - if this quote would exceed limit, stop here
             if (wordCount + words.length > maxWords) {
-                // Truncate this quote to fit
-                const remaining = maxWords - wordCount;
-                if (remaining > 0) {
-                    const truncated = words.slice(0, remaining).join(' ');
-                    result.push('"' + truncated + '"');
-                    wordCount = maxWords;
-                }
-                break;
+                break; // Don't truncate mid-quote, just stop
             }
             result.push(part);
             wordCount += words.length;
         } else {
-            // Action beat - count words and truncate sentences if needed
+            // Action beat - count words and stop at sentence boundaries
             const sentences = part.match(/[^.!?]+[.!?]*/g) || [];
             for (const sentence of sentences) {
                 const words = sentence.trim().split(/\s+/).filter(w => w.length > 0);
+                // Only add complete sentences - if this sentence would exceed limit, stop here
                 if (wordCount + words.length > maxWords) {
-                    const remaining = maxWords - wordCount;
-                    if (remaining > 0) {
-                        const truncated = words.slice(0, remaining).join(' ') + '.';
-                        result.push(truncated);
-                        wordCount = maxWords;
-                    }
-                    break;
+                    break; // Don't truncate mid-sentence, just stop
                 }
                 result.push(sentence);
                 wordCount += words.length;

@@ -228,7 +228,20 @@ async function rollPersonaName(btn) {
             `Generate a single authentic full name for a ${gender} person from: ${setting}. Return ONLY the name - no explanation, no quotes.`,
             'Generate a name.'
         );
-        document.getElementById('persona-name').value = result.replace(/["\'\.]/g, '').trim();
+        // Extract only the name - remove quotes, take first line, remove explanatory text
+        let cleanName = result
+            .replace(/["\'.]/g, '')
+            .split(/[\n\r]/)[0]
+            .trim();
+        // Remove common AI explanatory phrases
+        cleanName = cleanName
+            .replace(/\s*[-–].*$/i, '')
+            .replace(/\s*\(.*$/i, '')
+            .replace(/\s*\[.*$/i, '')
+            .replace(/\s+lastname\s+.*$/i, '')
+            .replace(/\s+full\s+name.*$/i, '')
+            .trim();
+        document.getElementById('persona-name').value = cleanName;
     } catch(e) { logError('rollPersonaName failed', e.message); }
     setDiceLoading(btn, false);
 }

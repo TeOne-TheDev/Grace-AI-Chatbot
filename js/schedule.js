@@ -13,7 +13,7 @@
 //   _forceScheduleUpdate, _queueAutoUpdate, _pickScheduleVariant,
 //   _buildScheduleCharContext, _buildSchedulePrompt, _buildTimelineFromSchedule,
 //   _getScheduleVariantKey, _autoUpdateScheduleIfNeeded, addMins, _isPersonalActivity,
-//   _resolveDisplayRoom, _resolveRoom, _sanitizeDayList, toMins (module-scoped)
+//   toMins (module-scoped)
 //
 // ═══════════════════════════════════════════════════════════════════════════
 // SCHEDULE SYSTEM v2
@@ -35,7 +35,8 @@
 // SOLO_ROOMS, DAY_KEYS, DAY_NAMES now in schedule/schedule_data.js
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Auto-update schedule system with 60s delay to prevent concurrent updates
+// Auto-update schedule system - triggers on pregnancy/cycle stage changes
+// No cooldown - updates immediately when stage changes
 // ─────────────────────────────────────────────────────────────────────────────
 // _AUTO_UPDATE_CONFIG now in schedule/schedule_data.js
 
@@ -43,29 +44,84 @@
 const _botPregnancyStage = new Map(); // botId -> {stage: string, week: number}
 
 /**
- * Get current pregnancy stage key for a bot
- * Returns null if not pregnant, otherwise returns stage identifier
+ * Add minutes to a time string (HH:MM format)
+ * @param {string} time - Time in HH:MM format
+ * @param {number} mins - Minutes to add
+ * @returns {string} New time in HH:MM format
+ */
+function addMins(time, mins) {
+    if (!time) return time;
+    const [h, m] = time.split(':').map(Number);
+    const totalMins = h * 60 + m + mins;
+    const newH = Math.floor(totalMins / 60) % 24;
+    const newM = totalMins % 60;
+    return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
+}
+
+/**
+ * Check if activity name indicates a personal/private activity
+ * @param {string} name - Activity name
+ * @returns {boolean} True if it's a personal activity
+ */
+function _isPersonalActivity(name) {
+    const n = (name || '').toLowerCase();
+    return n.includes('wake') || n.includes('sleep') || n.includes('wind-down') || n.includes('wind down')
+        || n.includes('get dressed') || n.includes('getting dressed') || n.includes('dressing')
+        || n.includes('night routine') || n.includes('morning routine') || n.includes('bedtime')
+        || n.includes('get ready') || n.includes('getting ready') || n.includes('nap')
+        || (n.includes('rest') && !n.includes('restaurant'));
+}
+
+/**
+ * Get current pregnancy or menstrual cycle stage key for a bot
+ * Returns null if no cycle data, otherwise returns stage identifier
  */
 function _getCurrentPregnancyStage(bot) {
-    if (!bot || !bot.cycleData || !bot.cycleData.pregnant) return null;
+    if (!bot || !bot.cycleData) return null;
     const cd = bot.cycleData;
     
-    // Parasite pregnancy stages
-    if (cd.isParasitePregnancy) {
-        const pDay = (typeof getParasiteWeek === 'function') ? getParasiteWeek(bot) : 0;
-        if (pDay < 3) return 'parasite_implantation';
-        if (pDay < 6) return 'parasite_feeding';
-        if (pDay < 9) return 'parasite_growth';
-        if (pDay < 12) return 'parasite_maturation';
-        return 'parasite_emergence';
+    // If pregnant, return pregnancy stage
+    if (cd.pregnant) {
+        // Parasite pregnancy stages
+        if (cd.isParasitePregnancy) {
+            const pDay = (typeof getParasiteWeek === 'function') ? getParasiteWeek(bot) : 0;
+            if (pDay < 3) return 'parasite_implantation';
+            if (pDay < 6) return 'parasite_feeding';
+            if (pDay < 9) return 'parasite_growth';
+            if (pDay < 12) return 'parasite_maturation';
+            return 'parasite_emergence';
+        }
+        
+        // Normal pregnancy stages
+        const weeks = (typeof getPregnancyWeek === 'function' ? getPregnancyWeek(bot) : 0) || 0;
+        if (weeks >= 43 && (bot.disadvantages||[]).includes('Always Overdue')) return 'overdue';
+        if (weeks <= 12) return 'trimester1';
+        if (weeks <= 26) return 'trimester2';
+        return 'trimester3';
     }
     
-    // Normal pregnancy stages
-    const weeks = (typeof getPregnancyWeek === 'function' ? getPregnancyWeek(bot) : 0) || 0;
-    if (weeks >= 43 && (bot.disadvantages||[]).includes('Always Overdue')) return 'overdue';
-    if (weeks <= 12) return 'trimester1';
-    if (weeks <= 26) return 'trimester2';
-    return 'trimester3';
+    // Not pregnant - check menstrual cycle stage
+    if (typeof getCurrentCycleDay === 'function') {
+        const cycleDay = getCurrentCycleDay(bot);
+        const cycleLength = cd.cycleLength || CYCLE_LENGTH;
+        const periodLength = cd.periodLength || PERIOD_LENGTH;
+        const ovulationDay = cd.ovulationDay || OVULATION_DAY;
+        const fertileStart = cd.fertileStart || FERTILE_WINDOW_START;
+        const fertileEnd = cd.fertileEnd || FERTILE_WINDOW_END;
+        
+        // Period phase
+        if (cycleDay <= periodLength) return 'cycle_period';
+        // Follicular phase (after period, before fertile window)
+        if (cycleDay < fertileStart) return 'cycle_follicular';
+        // Ovulation day
+        if (cycleDay === ovulationDay) return 'cycle_ovulation';
+        // Luteal phase (after ovulation until end of cycle)
+        if (cycleDay <= fertileEnd + 3) return 'cycle_luteal';
+        // PMS phase (last few days before period)
+        if (cycleDay > fertileEnd + 3 && cycleDay <= cycleLength) return 'cycle_pms';
+    }
+    
+    return 'normal';
 }
 
 /**
@@ -95,21 +151,14 @@ function _hasPregnancyStageChanged(bot) {
 }
 
 /**
- * Process auto-update queue with 60s delay between each update
+ * Process auto-update queue immediately (no delay)
  */
 async function _processAutoUpdateQueue() {
     if (_AUTO_UPDATE_CONFIG.isProcessing) return;
     _AUTO_UPDATE_CONFIG.isProcessing = true;
     
     while (_AUTO_UPDATE_CONFIG.updateQueue.length > 0) {
-        const now = Date.now();
-        const timeSinceLastUpdate = now - _AUTO_UPDATE_CONFIG.lastUpdateTime;
-        
-        // Wait if less than 60s since last update
-        if (timeSinceLastUpdate < _AUTO_UPDATE_CONFIG.minDelayMs) {
-            const waitTime = _AUTO_UPDATE_CONFIG.minDelayMs - timeSinceLastUpdate;
-            await new Promise(r => setTimeout(r, waitTime));
-        }
+        // No cooldown - process immediately
         
         // Get next bot from queue
         const bot = _AUTO_UPDATE_CONFIG.updateQueue.shift();
@@ -266,9 +315,10 @@ window._getScheduleVariantKey = _getScheduleVariantKey;
 window._autoUpdateScheduleIfNeeded = _autoUpdateScheduleIfNeeded;
 window.addMins = addMins;
 window._isPersonalActivity = _isPersonalActivity;
-window._resolveDisplayRoom = _resolveDisplayRoom;
-window._resolveRoom = _resolveRoom;
-window._sanitizeDayList = _sanitizeDayList;
+// Module-level helper functions (moved from local scope inside _buildTimelineFromSchedule)
+function toMins(t) { if (!t) return 9999; var p = t.split(':').map(Number); return p[0]*60+(p[1]||0); }
+
+// Expose toMins globally for external use
 window.toMins = toMins;
 
 // ── Build character + state context for schedule prompt ──────────────────────
@@ -452,7 +502,6 @@ Return ONLY one compact JSON object. No markdown, no explanation.`;
 // Returns array of {icon, name, start, end} sorted by time, 10-12 entries
 function _buildTimelineFromSchedule(s, validRooms) {
     if (!s) return [];
-    const toMins = function(t) { if (!t) return 9999; var p = t.split(':').map(Number); return p[0]*60+(p[1]||0); };
     // Build a fast resolver for stored rooms that may not exist in the group
     const _validIds = validRooms ? new Set(validRooms.map(r => r.id)) : null;
     // Detect this bot's private bedroom from validRooms (private + id starts with bedroom_)
@@ -472,15 +521,7 @@ function _buildTimelineFromSchedule(s, validRooms) {
         const matched = validRooms.find(r => !r.private && (r.id.includes(lower) || (r.name||'').toLowerCase().includes(lower)));
         return matched ? matched.id : (validRooms.find(r => !r.private && r.id !== 'outside') || validRooms[0] || {id:room}).id;
     };
-    // Keywords that mark a personal/private activity that must go in the bot's own bedroom
-    const _isPersonalActivity = (name) => {
-        const n = (name||'').toLowerCase();
-        return n.includes('wake') || n.includes('sleep') || n.includes('wind-down') || n.includes('wind down')
-            || n.includes('get dressed') || n.includes('getting dressed') || n.includes('dressing')
-            || n.includes('night routine') || n.includes('morning routine') || n.includes('bedtime')
-            || n.includes('get ready') || n.includes('getting ready') || n.includes('nap')
-            || (n.includes('rest') && !n.includes('restaurant'));
-    };
+    // Use module-level _isPersonalActivity function
     const addMins = function(t, m) {
         var total = toMins(t) + m;
         return String(Math.floor(total/60)).padStart(2,'0') + ':' + String(total%60).padStart(2,'0');

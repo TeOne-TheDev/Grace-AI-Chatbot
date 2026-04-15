@@ -134,9 +134,6 @@ function renderParasiteBioPanel(bot, pregPanel) {
         <div style="background:#2a0040;border-radius:6px;height:6px;margin-bottom:8px;overflow:hidden">
             <div style="height:100%;width:${stageInfo.pct||100}%;background:${stageInfo.color};border-radius:6px;transition:width 0.5s"></div>
         </div>
-        <div style="margin-top:4px;display:flex;gap:6px">
-            <button onclick="triggerParasiteBirth()" style="flex:1;background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:7px;font-size:12px;font-weight:bold;cursor:pointer">${stageInfo.icon} Force Emergence</button>
-        </div>
     `;
     pregPanel.appendChild(div);
 }

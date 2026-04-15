@@ -1,7 +1,9 @@
 // schedule_context.js - Schedule context building
 // Depends on: schedule/schedule_data.js (DAY_KEYS, DAY_NAMES), bots/bot_data.js (getCurrentAge), core/time.js (timeStrToMinutes, minutesToTimeStr)
 
-function getScheduleContext(bot) {
+// NOTE: The full getScheduleContext is defined in js/shared.js with [ACTIVITY]: tag support
+// This helper provides the raw schedule format for other uses
+function getRawScheduleContext(bot) {
     if (!bot.schedule) return '';
     
     const parts = ['[Daily Schedule]:'];
@@ -66,7 +68,7 @@ function checkScheduleMilestones(bot, currentMinutes) {
     return null;
 }
 
-// Expose globally
-window.getScheduleContext = getScheduleContext;
+// Expose globally (getScheduleContext is defined in js/shared.js with full [ACTIVITY]: tag support)
+window.getRawScheduleContext = getRawScheduleContext;
 window.getScheduleMilestones = getScheduleMilestones;
 window.checkScheduleMilestones = checkScheduleMilestones;

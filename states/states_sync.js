@@ -69,11 +69,27 @@ function rollRandomStates(bot, count = 3) {
 }
 
 function getStatesContext(bot) {
-    if (!bot.states || bot.states.length === 0) return '';
+    if (!bot) return '';
+    const baseStates = bot.states || [];
+    
+    // Auto-inject labor state based on cycleData
+    const cd = bot.cycleData;
+    const autoStates = [];
+    if (cd && cd.laborStarted && !cd.birthVirtualDay) {
+        autoStates.push('in_labor');
+    }
+    
+    const allStateIds = [...new Set([...baseStates, ...autoStates])];
+    if (allStateIds.length === 0) return '';
     
     const parts = ['[Current States]:'];
-    bot.states.forEach(state => {
-        parts.push(`- ${state}`);
+    allStateIds.forEach(state => {
+        const stateDef = typeof ALL_STATES !== 'undefined' ? ALL_STATES.find(s => s.id === state) : null;
+        if (stateDef) {
+            parts.push(`- ${stateDef.icon} ${stateDef.label}: ${stateDef.desc}`);
+        } else {
+            parts.push(`- ${state}`);
+        }
     });
     
     return parts.join('\n');

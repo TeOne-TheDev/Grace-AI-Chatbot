@@ -29,6 +29,27 @@ async function estimateTimePassed(bot, userMsg, botReply) {
     if (bot.cycleData && bot.cycleData.isParasitePregnancy) {
         checkParasiteAutoLabor(bot);
     }
+    
+    // Advance delivery progress for active labor (passive time-based)
+    if (bot.cycleData && bot.cycleData.deliveryInProgress) {
+        if (typeof advanceDeliveryProgress === 'function') {
+            const result = advanceDeliveryProgress(bot, 'passive');
+            
+            // If simultaneous delivery happened, show notification
+            if (result?.delivered && result.simultaneous) {
+                showToast(
+                    `${decodeUnicode('\uD83D\uDEA8')} ${result.deliveredCount} parasites emerged during this time!`,
+                    '#1a0a0a',
+                    '#ef4444'
+                );
+            }
+        }
+        
+        // Refresh delivery UI if visible
+        if (typeof renderDeliveryProgress === 'function') {
+            renderDeliveryProgress(bot);
+        }
+    }
 }
 
 async function _estimateTimePassedInner(bot, userMsg, botReply) {

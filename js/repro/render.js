@@ -41,6 +41,10 @@ function evaluateCycleAfterTimeSkip(bot, daysAdvanced) {
                 cd.laborVirtualDay = virtualDay;
                 cd.laborVirtualMinutes = Math.max(0, getVirtualMinutes(bot) - 1); 
                 addReproEvent(bot, '\uD83D\uDEA8 Labor has begun! Contractions starting...');
+                // Initialize individual delivery progress
+                if (typeof initDeliveryProgress === 'function') {
+                    initDeliveryProgress(bot);
+                }
             }
         }
         
@@ -53,6 +57,10 @@ function evaluateCycleAfterTimeSkip(bot, daysAdvanced) {
                 cd.laborVirtualDay = virtualDay;
                 cd.laborVirtualMinutes = getVirtualMinutes(bot);
                 addReproEvent(bot, '\u26A0\uFE0F Parasite preparing to emerge - day ' + parasiteDays + '/15. EMERGENCE IMMINENT.');
+                // Initialize individual delivery progress for parasite emergence
+                if (typeof initDeliveryProgress === 'function') {
+                    initDeliveryProgress(bot);
+                }
             }
         }
         
@@ -363,39 +371,17 @@ function renderReproHealth(bot) {
                     : `<div style="color:#c084fc;font-size:11px;font-style:italic">${stageInfo.desc}</div>`;
             }
 
-            // Show parasite emergence panel when labor starts (day 12-15)
-            const parasitePanel = document.getElementById('solo-parasite-emergence');
-            const parasitePanelContent = document.getElementById('solo-parasite-emergence-content');
-            if (cd.laborStarted && parasitePanel && parasitePanelContent) {
-                parasitePanel.style.display = 'block';
-                const emergenceMinutes = getLaborElapsedMinutes(bot);
-                const emergenceHours = emergenceMinutes / 60;
-                
-                // Determine emergence stage based on hours since labor started
-                let emergenceStage, emergenceDesc;
-                if (emergenceHours < 1) {
-                    emergenceStage = 'Initial Awakening';
-                    emergenceDesc = 'Parasites beginning to stir. Mild discomfort, strange movements beneath the skin.';
-                } else if (emergenceHours < 3) {
-                    emergenceStage = 'Thrashing';
-                    emergenceDesc = 'Violent internal movement. Parasites fighting to emerge. Contractions intensifying.';
-                } else if (emergenceHours < 6) {
-                    emergenceStage = 'Emergence Imminent';
-                    emergenceDesc = 'Body preparing for emergence. Aphrodisiac flooding system. Peak intensity.';
-                } else {
-                    emergenceStage = 'Critical';
-                    emergenceDesc = 'Emergency state. Parasites about to burst forth. Seek immediate assistance.';
+            // Initialize and show delivery progress panel only (cleaner UI)
+            if (cd.laborStarted) {
+                // Initialize delivery progress if not already done
+                if (!cd.deliveryInProgress && typeof initDeliveryProgress === 'function') {
+                    initDeliveryProgress(bot);
                 }
-
-                parasitePanelContent.innerHTML = `
-                    <div style="margin-bottom:4px"><strong>Stage:</strong> ${emergenceStage}</div>
-                    <div style="margin-bottom:4px"><strong>Time in labor:</strong> ${Math.floor(emergenceHours)}h ${Math.floor(emergenceMinutes % 60)}m</div>
-                    <div style="margin-bottom:4px"><strong>Day:</strong> ${parasiteDay}/15</div>
-                    <div style="margin-bottom:4px"><strong>Larvae count:</strong> ${larvaeCount}</div>
-                    <div style="margin-top:6px;padding-top:6px;border-top:1px solid #22c55e44;color:#86efac;font-style:italic">${emergenceDesc}</div>
-                `;
-            } else if (parasitePanel) {
-                parasitePanel.style.display = 'none';
+                
+                // Render individual delivery progress UI
+                if (typeof renderDeliveryProgress === 'function') {
+                    renderDeliveryProgress(bot);
+                }
             }
 
             return;

@@ -105,7 +105,7 @@ async function sendMsg() {
     let _routeResult = { call: 'chatbot', npcType: null, npcIsSystem: false };
 
     // ── AI ROUTER: decide chatbot vs NPC vs both (sequential like stable version)
-    if (getGroqKeys().length && bot.npcEnabled !== false) {
+    if (getGroqKeys().length && bot.npcEnabled === true) {
         try {
             const _routerMessages = [{
                 role: 'system',
@@ -413,14 +413,15 @@ ${_waterNote}${_monsterLaborNote}
 
 
         function trimActionBlocks(text) {
-
+            // Only trim extremely long action blocks (>50 words), preserve natural sentence flow
             const parts = text.split(/("(?:[^"\\]|\\.)*?")/g);
             return parts.map((part, i) => {
                 if (i % 2 === 1) return part; // quoted dialogue - keep as is
                 return part.replace(/([^.!?]+[.!?])/g, (sentence) => {
                     const words = sentence.trim().split(/\s+/);
-                    if (words.length > 18) {
-                        return ' ' + words.slice(0, 15).join(' ') + '. ';
+                    // Only truncate if sentence is extremely long (>50 words)
+                    if (words.length > 50) {
+                        return ' ' + words.slice(0, 45).join(' ') + '... ';
                     }
                     return sentence;
                 });

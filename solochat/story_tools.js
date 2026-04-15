@@ -97,7 +97,6 @@ ${bot.cycleData && bot.cycleData.laborStarted && !bot.cycleData.birthVirtualDay 
         }
         reply = reply.replace(/EMOTION::[\s\S]*/, '').trim();
         reply = cleanReply(reply);
-        reply = enforceReplyWordLimit(reply);
         bot.history.push({role: 'assistant', content: reply, msgId: Date.now().toString()});
         bot.lastChatted = Date.now();
         saveBots();

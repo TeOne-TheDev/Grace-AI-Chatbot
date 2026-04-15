@@ -1269,7 +1269,7 @@ function saveGroup() {
     if (!name) return alert('Please enter a group name!');
     const selected = [...document.querySelectorAll('.member-pick-row.selected')].map(r => r.dataset.id);
     if (selected.length < 2) return alert('Please select at least 2 members!');
-    const useDynBio = document.getElementById('grp-use-dynbio')?.checked !== false;
+    const copySolo = document.getElementById('grp-copy-solo')?.checked !== false;
     const memberRelation = (document.getElementById('grp-relation-input')?.value || '').trim();
     const grpCreatePersonaId = document.getElementById('grp-create-persona-select')?.value || '';
     const worldEnv = (document.getElementById('grp-world-input')?.value.trim() || '');
@@ -1291,7 +1291,7 @@ function saveGroup() {
             characterRelations[el.dataset.memberA + '_' + el.dataset.memberB] = socialType;
         }
     });
-    const grp = { id: Date.now().toString(), name, memberIds: selected, history: [], useDynBio, memberRelation, characterRelations, personaId: grpCreatePersonaId, personaLocked: !!grpCreatePersonaId, worldType, worldSetting, worldEra, bgUrl: worldBgUrl || '', worldRooms: worldRooms || null };
+    const grp = { id: Date.now().toString(), name, memberIds: selected, history: [], memberRelation, characterRelations, personaId: grpCreatePersonaId, personaLocked: !!grpCreatePersonaId, worldType, worldSetting, worldEra, bgUrl: worldBgUrl || '', worldRooms: worldRooms || null };
     // Apply AI-generated rooms if available
     if (worldRooms && Array.isArray(worldRooms)) {
         grp.rooms = worldRooms;
@@ -1311,6 +1311,14 @@ function saveGroup() {
     });
     if (_anyBotUpdated) saveBots();
     groups.unshift(grp);
+    
+    // If checked, copy solo dynBio to group as initial state
+    if (copySolo) {
+        selected.forEach(id => {
+            grpCopySoloToGroupInitial(grp.id, id);
+        });
+    }
+    
     saveGroups();
     document.getElementById('grp-name-input').value = '';
     const relInput = document.getElementById('grp-relation-input');
@@ -1325,6 +1333,8 @@ function saveGroup() {
     const wr = document.getElementById('grp-world-rooms-preview'); if (wr) { wr.innerHTML = ''; wr.style.display = 'none'; }
     const wrj = document.getElementById('grp-world-rooms-json'); if (wrj) wrj.value = '';
     document.getElementById('grp-world-bgurl').value = '';
+    const copySoloCb = document.getElementById('grp-copy-solo');
+    if (copySoloCb) copySoloCb.checked = true; // Reset to default
     renderBotList();
     closeScreen('sc-group-create');
 }

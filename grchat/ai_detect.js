@@ -151,6 +151,29 @@ async function applyGroupTimeSkip(txt, members) {
         // No intentional skip - just advance a few minutes per exchange
         const baseMins = 4 + Math.floor(Math.random() * 4);
         advanceGroupChatMinutes(members, baseMins);
+        
+        // Still advance delivery progress for bots in labor (small time increments matter)
+        members.forEach(bot => {
+            if (bot.cycleData && bot.cycleData.deliveryInProgress) {
+                if (typeof advanceDeliveryProgress === 'function') {
+                    const result = advanceDeliveryProgress(bot, 'passive');
+                    if (result?.delivered && result.simultaneous) {
+                        showToast(
+                            `${decodeUnicode('\uD83D\uDEA8')} ${result.deliveredCount} parasites emerged!`,
+                            '#1a0a0a',
+                            '#ef4444'
+                        );
+                    }
+                }
+            }
+        });
+        
+        // Refresh delivery UI
+        if (typeof renderDeliveryProgress === 'function') {
+            members.filter(m => m?.cycleData?.deliveryInProgress)
+                   .forEach(bot => renderDeliveryProgress(bot));
+        }
+        
         return false;
     }
 
@@ -184,6 +207,32 @@ async function applyGroupTimeSkip(txt, members) {
     });
 
     updateGroupTimeBadges(members);
+    
+    // Advance delivery progress for any bot in active labor (group chat)
+    members.forEach(bot => {
+        if (bot.cycleData && bot.cycleData.deliveryInProgress) {
+            if (typeof advanceDeliveryProgress === 'function') {
+                const result = advanceDeliveryProgress(bot, 'passive');
+                
+                // Show notification for simultaneous deliveries
+                if (result?.delivered && result.simultaneous) {
+                    showToast(
+                        `${decodeUnicode('\uD83D\uDEA8')} ${result.deliveredCount} parasites emerged during this time!`,
+                        '#1a0a0a',
+                        '#ef4444'
+                    );
+                }
+            }
+        }
+    });
+    
+    // Refresh delivery UI if visible for any bot in labor
+    const _grp = typeof curGroupId !== 'undefined' ? groups?.find(g => g.id === curGroupId) : null;
+    if (_grp && typeof renderDeliveryProgress === 'function') {
+        const _botsInLabor = members.filter(m => m?.cycleData?.deliveryInProgress);
+        _botsInLabor.forEach(bot => renderDeliveryProgress(bot));
+    }
+    
     return true;
 }
 

@@ -90,17 +90,21 @@ function formatBubbleContent(text) {
         s = s.replace(/\x01T([^\x01]*)\x01T/g, (_, t) => '<span class="usr-thought" title="Inner thought — AI senses but cannot directly read">(' + esc(t) + ')</span>');
         return s;
     }
-    const splitParts = cleaned.split(/("(?:[^"]*)")/);
+    // First, fix missing spaces after quotes: "word."Next -> "word." Next
+    cleaned = cleaned.replace(/"([a-zA-Z])/g, '" $1');
+    // Split on quoted text (dialogue) - trailing space is optional
+    const splitParts = cleaned.split(/("(?:[^"]*)"\s*)/);
     let result = '';
     splitParts.forEach((part, i) => {
+        // Skip empty parts
+        if (!part || part === '""' || part === '"' || !part.trim()) return;
         if (i % 2 === 1) {
-            result += '<span class="speech-text">' + restoreI(esc(part)) + '</span>';
+            // Dialogue - trim the trailing space we added
+            result += '<span class="speech-text">' + restoreI(esc(part.trim())) + '</span>';
         } else {
-            if (part) {
-                let _p = restoreI(esc(part));
-                _p = _p.replace(/\n/g, '<br>'); // Handle newlines in action text
-                result += '<span class="action-text">' + _p + '</span>';
-            }
+            let _p = restoreI(esc(part));
+            _p = _p.replace(/\n/g, '<br>'); // Handle newlines in action text
+            result += '<span class="action-text">' + _p + '</span>';
         }
     });
     if (!result) {
@@ -174,6 +178,9 @@ const T = {
 };
 
 function getLang() {
+    // Read from language picker or fallback to English
+    const langSel = document.getElementById('ai-lang-select');
+    if (langSel) return langSel.value;
     return safeGetItem('ai_lang', 'English');
 }
 
@@ -398,7 +405,7 @@ function buildHistoryForAPI(bot) {
 
         let content = baseContent;
         if (m.role === 'user' && m.innerThoughts && m.innerThoughts.length > 0) {
-            const thoughtHint = m.innerThoughts.join(' / ');
+            const thoughtHint = decodeUnicode(m.innerThoughts.join(' / '));
             content = content
                 ? content + `\n[Narrator note - his inner feeling, not spoken aloud: ${thoughtHint}]`
                 : `[Narrator note - his inner feeling, not spoken aloud: ${thoughtHint}]`;
@@ -689,6 +696,65 @@ function deleteAllChatData() {
 
     showToast('🗑️ All chat data deleted successfully', '#1a0505', '#ef4444');
 }
+
+function deleteEverything() {
+    if (!confirm('⚠️ DANGER: This will delete ALL data including API keys, personas, and settings!\n\nThis is a COMPLETE factory reset. EVERYTHING will be lost.\n\nAre you absolutely sure?')) return;
+    if (!confirm('🔥 FINAL WARNING: API keys, all characters, groups, folders, images, personas, and settings will be PERMANENTLY DELETED.\n\nType "DELETE EVERYTHING" in your mind to confirm...')) return;
+
+    // 1. Do everything deleteAllChatData does
+    bots = [];
+    groups = [];
+    folders = [];
+    curId = null;
+    curGroupId = null;
+
+    // 2. Remove all chat data
+    safeRemoveItem('grace_bots_v6');
+    safeRemoveItem('grace_bots');
+    safeRemoveItem('grace_groups_v1');
+    safeRemoveItem('grace_folders_v1');
+
+    // 3. Delete generated images and portraits
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('grace_illus_') || key.startsWith('grace_portrait_'))) {
+            keysToRemove.push(key);
+        }
+    }
+    keysToRemove.forEach(k => safeRemoveItem(k));
+
+    // 4. Delete API keys
+    safeRemoveItem('groq_keys_list');
+    safeRemoveItem('groq_key');
+    safeRemoveItem('groq_key_2');
+    safeRemoveItem('groq_key_3');
+    safeRemoveItem('groq_key_idx');
+
+    // 5. Delete personas
+    safeRemoveItem('grace_personas_v1');
+    personas = [];
+
+    // 6. Delete settings/preferences
+    safeRemoveItem('grace_lang');
+    safeRemoveItem('grace_settings_v1');
+    safeRemoveItem('img_style_override');
+    safeRemoveItem('grace_last_screen');
+
+    // 7. Update UI
+    if (typeof showScreen === 'function') {
+        showScreen('sc-home');
+    }
+    if (typeof renderBotList === 'function') {
+        renderBotList();
+    }
+    if (typeof renderFolderList === 'function') {
+        renderFolderList();
+    }
+
+    showToast('💥 EVERYTHING deleted. App reset to factory state.', '#1a0505', '#ef4444');
+}
+
 function savePersonas() {
     safeSetItem('grace_personas_v1', JSON.stringify(personas));
 }
@@ -966,10 +1032,10 @@ const REL_PRESETS = [
 ];
 
 function getDynField(bot, field) {
-    // ── When in group context, grpDynBio takes precedence over dynBio ────────
-    // grpDynBio = synced from group history (grpFullSyncDynBio / grpSyncMemberBio)
-    // dynBio    = synced from solo chat history (fullSyncDynBio)
-    // Both are valid, but group context is more relevant in group chat.
+    // ── Solo and Group chat are now COMPLETELY SEPARATE universes ─────────────
+    // grpDynBio = group chat bio (independent, no sync from solo)
+    // dynBio    = solo chat bio (independent, no sync from group)
+    // When in group context, grpDynBio takes precedence over dynBio for display only
     if (curGroupId) {
         const gd = bot.grpDynBio;
         if (gd && gd[field] !== undefined && gd[field] !== null && gd[field] !== '') {
@@ -1015,7 +1081,7 @@ function buildRelationshipGuidance(socialRelation, familyRelation, emotionalRela
     }
     
     // Family relation (static - family bonds)
-    if (familyRelation) {
+    if (familyRelation && familyRelation.toLowerCase() !== 'none') {
         core.push(`[FAMILY RELATIONSHIP - static]: "${familyRelation}". This relationship type does not change during chat.`);
         const family = familyRelation.toLowerCase();
         const isFamilyParentChild = /\bmother|mom|mum|father|dad|parent|son|daughter|child|kid\b/.test(family);
@@ -1060,7 +1126,8 @@ function buildRelationshipGuidance(socialRelation, familyRelation, emotionalRela
         core.push('- Do not "role drift" just because the user sends a short/flirty line. If tone shifts, transition gradually and credibly.');
     }
     
-    if (!socialRelation && !familyRelation && !emotionalRelation) {
+    const hasFamilyRelation = familyRelation && familyRelation.toLowerCase() !== 'none';
+    if (!socialRelation && !hasFamilyRelation && !emotionalRelation) {
         core.push('[RELATIONSHIP - GENERAL]: No specific relationship defined. Treat the user as a new acquaintance.');
     }
     
@@ -1685,7 +1752,20 @@ Explore uncommon given names, regional variants, historical names, or names from
 Return ONLY the name - no explanation, no quotes, no labels.`,
             `Generate one ${_nseed} authentic name from ${culturePick} - avoid cliches. Seed: ${_digitSeed}.`
         );
-        document.getElementById('bot-name').value = result.replace(/["\'.]/g, '').trim();
+        // Extract only the name - remove quotes, take first line, remove explanatory text
+        let cleanName = result
+            .replace(/["\'.]/g, '')
+            .split(/[\n\r]/)[0]
+            .trim();
+        // Remove common AI explanatory phrases
+        cleanName = cleanName
+            .replace(/\s*[-–].*$/i, '')
+            .replace(/\s*\(.*$/i, '')
+            .replace(/\s*\[.*$/i, '')
+            .replace(/\s+lastname\s+.*$/i, '')
+            .replace(/\s+full\s+name.*$/i, '')
+            .trim();
+        document.getElementById('bot-name').value = cleanName;
     } catch (e) {
         logError('rollName failed', e.message);
     }
@@ -1816,10 +1896,61 @@ async function randomizeAllFields() {
     document.body.appendChild(dummyBtn);
     showToast('🎲 Randomizing all fields...', '#1a0e00', '#f59e0b');
     try {
-        // Step 1: Base traits first (Age, Year, Culture/Country, Relation)
-        document.getElementById('bot-age').value = Math.floor(Math.random() * 16 + 20);
-        const relations = ['Stranger', 'Friend', 'Colleague', 'Neighbor', 'Classmate', 'Rival'];
-        document.getElementById('bot-relation').value = relations[Math.floor(Math.random() * relations.length)];
+        // Step 1: Base traits first (Age, Year, Culture/Country, Relations)
+        const botAge = Math.floor(Math.random() * 16 + 20);
+        document.getElementById('bot-age').value = botAge;
+        const socialRelations = ['Stranger', 'Friend', 'Colleague', 'Neighbor', 'Classmate', 'Rival', 'Boss', 'Employee'];
+        
+        // Gender & Age-dependent family relations (60% chance none, 40% family)
+        const gender = document.getElementById('bot-gender')?.value || 'Female';
+        const isFemale = gender !== 'Male';
+        
+        // Age-appropriate family relations
+        let ageAppropriateRelations = ['None', 'None', 'None']; // 3 None = 60% no family
+        
+        if (botAge < 30) {
+            // Young: can be sibling, child, niece/nephew, grandchild, cousin
+            ageAppropriateRelations.push(
+                isFemale ? 'Sister' : 'Brother',
+                isFemale ? 'Step Sister' : 'Step Brother',
+                'Cousin',
+                isFemale ? 'Daughter' : 'Son',
+                isFemale ? 'Niece' : 'Nephew',
+                isFemale ? 'Granddaughter' : 'Grandson'
+            );
+        } else if (botAge < 45) {
+            // Middle age: sibling, cousin, aunt/uncle, maybe parent if had kids young
+            ageAppropriateRelations.push(
+                isFemale ? 'Sister' : 'Brother',
+                isFemale ? 'Step Sister' : 'Step Brother',
+                'Cousin',
+                isFemale ? 'Aunt' : 'Uncle',
+                isFemale ? 'Niece' : 'Nephew',
+                Math.random() < 0.3 ? (isFemale ? 'Mother' : 'Father') : (isFemale ? 'Aunt' : 'Uncle')
+            );
+        } else if (botAge < 60) {
+            // Older: parent, step-parent, aunt/uncle, cousin, grandparent if had kids young
+            ageAppropriateRelations.push(
+                isFemale ? 'Mother' : 'Father',
+                isFemale ? 'Step Mother' : 'Step Father',
+                isFemale ? 'Aunt' : 'Uncle',
+                'Cousin',
+                Math.random() < 0.2 ? (isFemale ? 'Grandmother' : 'Grandfather') : (isFemale ? 'Aunt' : 'Uncle')
+            );
+        } else {
+            // Elderly: grandparent, parent (had kids young), aunt/uncle
+            ageAppropriateRelations.push(
+                isFemale ? 'Grandmother' : 'Grandfather',
+                isFemale ? 'Mother' : 'Father',
+                isFemale ? 'Step Mother' : 'Step Father',
+                isFemale ? 'Aunt' : 'Uncle'
+            );
+        }
+        
+        const emotionalRelations = ['neutral', 'friend', 'rival', 'enemy', 'curious', 'attracted'];
+        document.getElementById('bot-social-relation').value = socialRelations[Math.floor(Math.random() * socialRelations.length)];
+        document.getElementById('bot-family-relation').value = ageAppropriateRelations[Math.floor(Math.random() * ageAppropriateRelations.length)];
+        document.getElementById('bot-emotional-relation').value = emotionalRelations[Math.floor(Math.random() * emotionalRelations.length)];
         const eras = ['2024', '2020s', '2010s', '1990s', '1980s', '1960s', '1940s', '1920s', '1900s'];
         document.getElementById('bot-year').value = eras[Math.floor(Math.random() * eras.length)];
         const commonCountries = ['Japan', 'South Korea', 'China', 'USA', 'UK', 'France', 'Germany', 'Brazil', 'Italy'];
@@ -1853,6 +1984,42 @@ async function randomizeAllFields() {
     } finally {
         dummyBtn.remove();
     }
+}
+
+function handleAvatarUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+        showToast('❌ Please select an image file', '#1a0e00', '#ef4444');
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const dataUrl = e.target.result;
+        document.getElementById('av-preview').src = dataUrl;
+        document.getElementById('bot-av-url').value = dataUrl;
+        showToast('✅ Avatar uploaded!', '#0a1a0a', '#22c55e');
+    };
+    reader.onerror = function() {
+        showToast('❌ Failed to read image', '#1a0e00', '#ef4444');
+    };
+    reader.readAsDataURL(file);
+}
+
+function openAvatarZoom() {
+    const preview = document.getElementById('av-preview');
+    const zoomImg = document.getElementById('av-zoom-img');
+    const modal = document.getElementById('av-zoom-modal');
+    if (!preview || !zoomImg || !modal) return;
+    // Use current preview src or fall back to bot-av-url
+    const avUrl = document.getElementById('bot-av-url')?.value;
+    zoomImg.src = preview.src || avUrl || '';
+    modal.style.display = 'flex';
+}
+
+function closeAvatarZoom() {
+    const modal = document.getElementById('av-zoom-modal');
+    if (modal) modal.style.display = 'none';
 }
 
 function minutesToTimeStr(mins) {
@@ -2538,14 +2705,14 @@ function getScheduleMilestones(bot) {
 function checkScheduleMilestones(bot, prevMins, newMins) {
     if (!bot.schedule) return;
 
-    // ── Auto-update schedule when pregnancy stage changes ──
+    // ── Auto-update schedule when pregnancy/cycle stage changes ──
     if (typeof _hasPregnancyStageChanged === 'function' && typeof _queueAutoUpdate === 'function') {
         if (_hasPregnancyStageChanged(bot)) {
             const currentStage = _getCurrentPregnancyStage(bot);
             if (currentStage) {
-                // Queue for auto-update with 60s delay to prevent concurrent updates
+                // Queue for immediate auto-update (no cooldown)
                 _queueAutoUpdate(bot);
-                logError('checkScheduleMilestones', `Pregnancy stage changed to ${currentStage} for ${bot.name}, queued auto-update`);
+                logError('checkScheduleMilestones', `Stage changed to ${currentStage} for ${bot.name}, queued auto-update`);
             }
         }
     }
@@ -2711,8 +2878,20 @@ Answer ONLY "yes" (conversation is active, would feel jarring) or "no" (natural 
 
 
 function getStatesContext(bot) {
-    if (!bot || !bot.states || bot.states.length === 0) return '';
-    const labels = bot.states
+    if (!bot) return '';
+    const baseStates = bot.states || [];
+    
+    // Auto-inject labor state based on cycleData
+    const cd = bot.cycleData;
+    const autoStates = [];
+    if (cd && cd.laborStarted && !cd.birthVirtualDay) {
+        autoStates.push('in_labor');
+    }
+    
+    const allStateIds = [...new Set([...baseStates, ...autoStates])];
+    if (allStateIds.length === 0) return '';
+    
+    const labels = allStateIds
         .map(id => (typeof ALL_STATES !== 'undefined' ? ALL_STATES.find(s => s.id === id) : null))
         .filter(Boolean)
         .map(s => `${s.icon} ${s.label}: ${s.desc}`);
@@ -3080,13 +3259,10 @@ function openChat(id) {
         cNameEl.style.fontWeight = 'bold';
         cNameEl.style.opacity = '1';
 
-        // Show bot name in location badge when context is displayed
+        // Show location in location badge (not bot name - that's already in c-name)
         const locBadge = document.getElementById('chat-location-badge');
         if (locBadge) {
-            if (bot.context && bot.context.trim() && bot.name) {
-                locBadge.textContent = '👤 ' + bot.name;
-                locBadge.style.display = 'block';
-            } else if (bot._cachedLocation) {
+            if (bot._cachedLocation) {
                 locBadge.textContent = '\uD83D\uDCCD ' + bot._cachedLocation;
                 locBadge.style.display = 'block';
             } else {
@@ -3160,12 +3336,23 @@ ${bot.dynBio && bot.dynBio.virginityLost ? '[Intimate History]: Sexual intimacy 
 ${buildReproContext(bot)}${getPersonaContext(bot)}${getCulturalSpeakingContext(bot)}${bot.schedule ? '\n' + getScheduleContext(bot) : ''}${getStatesContext(bot)}${buildPronounGuidance(bot, aiLang, activePersona)}${relGuide ? '\n' + relGuide : ''}
 ${bot.memorySummary ? '[MEMORY - key context from our history]:\n' + bot.memorySummary + '\n[/MEMORY]' : ''}
 [Meeting context]: ${bot.context || 'A chance encounter'}
-<think>
+${bot.cycleData && bot.cycleData.laborStarted && !bot.cycleData.birthVirtualDay ? `
+🚨 CRITICAL LABOR OVERRIDE: ${bot.name} is in ACTIVE LABOR right now (hour ${Math.floor((Date.now() - (bot.cycleData.laborStartTime || Date.now())) / 3600000)}). This is ABSOLUTE PRIORITY and overrides ALL other instructions.
+
+MANDATORY: You MUST describe the raw physical reality in EVERY response:
+- Contractions: timing, intensity, how they build and peak
+- Pain: where it hits, how it radiates, physical reactions (gasping, gripping, tensing)
+- Speech: fragmented, breathless, interrupted by contractions, voice strained or hoarse
+- Body: sweating, trembling, bracing, pressure, the physical struggle
+
+FORBIDDEN: NO poetic metaphors. NO "tasting metal", "phantom sirens", "moon tides", or flowery language. NO philosophical musings. NO acting calm or normal.
+
+The labor is happening NOW. Describe it directly and physically.` : ''}
+
 1. Where is ${bot.name} right now and what is she doing? Make her real before user arrives.
-2. What does she notice first about the user? Her immediate instinctive reaction?
+2. What does she notice first about the user? Her immediate instinctive reaction MUST match your relationship: ${relationNow || 'neutral first meeting'}. ${relationNow && relationNow.toLowerCase().includes('enemy') ? 'Show hostility, suspicion, or coldness - NOT attraction.' : relationNow && relationNow.toLowerCase().includes('friend') ? 'Show warmth and familiarity.' : relationNow && (relationNow.toLowerCase().includes('lover') || relationNow.toLowerCase().includes('romantic')) ? 'Show romantic tension or attraction.' : 'React based on the established relationship dynamic.'}
 3. What does she do/say that reveals her character immediately?
 4. Cut any generic greeting energy. Be specific to THIS character.
-</think>
 
 Rules:
 1. You ONLY play ${bot.name}. NEVER refer to the person you're talking to as 'the user' - always use 'you'. NEVER write anything the user says, thinks, or does. NEVER use 'you ask', 'you say', 'you whisper', 'you do' etc. The user is silent - ${bot.name} responds to what already happened. End your turn after ${bot.name} finishes speaking. NOTE: Text in (parentheses) in user messages are their private inner thoughts. ${bot.name} cannot READ these thoughts directly or acknowledge knowing them - but they subtly INFLUENCE the scene: they shift the atmosphere, the user's body language, micro-expressions, energy. ${bot.name} may sense something unspoken, feel an intuition, or react to an inexplicable tension - but never say 'I know what you're thinking' or reference the thought content explicitly.
@@ -3184,7 +3371,7 @@ Rules:
         let reply = data.choices?.[0]?.message?.content || '';
         reply = reply.replace(/EMOTION::[\s\S]*/, '').trim(); reply = cleanReply(reply);
         if (!reply || !reply.trim()) {
-            reply = `She meets your eyes and takes a measured breath. "You're here." Her voice softens just enough to matter. "Tell me what you need from me right now."`;
+            reply = `She glances up as you enter, her expression settling into something measured. "You're here." A brief pause follows. "What do you want?"`;
         }
         bot.history.push({ role: 'assistant', content: reply, msgId: Date.now().toString() });
         bot.lastChatted = Date.now();
@@ -3396,10 +3583,79 @@ function clearChatHistory() {
 
     bot.dynBio = {};
 
+    // Restore first data if available
+    restoreFirstData(bot);
+
+    // Reset persona lock so user can repick after clearing chat
+    bot.personaLocked = false;
+
     saveBots();
     document.getElementById('chat-container').innerHTML = '';
 
     triggerFirstGreeting(bot);
+}
+
+function saveFirstData(bot) {
+    // Capture current state as the "first data" baseline
+    bot.firstData = {
+        appearance: bot.appearance,
+        age: bot.age,
+        gender: bot.gender,
+        career: bot.career,
+        year: bot.year,
+        country: bot.country,
+        bio: bot.bio,
+        prompt: bot.prompt,
+        relation: bot.relation,
+        dynBio: JSON.parse(JSON.stringify(bot.dynBio || {})),
+        schedule: bot.schedule ? JSON.parse(JSON.stringify(bot.schedule)) : null,
+        personaId: bot.personaId,
+        // Body measurements
+        height: bot.height,
+        weight: bot.weight,
+        bust: bot.bust,
+        waist: bot.waist,
+        hips: bot.hips,
+        // States
+        states: bot.states ? [...bot.states] : [],
+        // Cycle/repro data (capture initial pregnancy/cycle state)
+        cycleData: bot.cycleData ? JSON.parse(JSON.stringify(bot.cycleData)) : null
+    };
+    console.log('[First Data] Saved initial state for', bot.name);
+}
+
+function restoreFirstData(bot) {
+    if (!bot.firstData) {
+        console.log('[First Data] No saved first data for', bot.name);
+        return;
+    }
+    const fd = bot.firstData;
+    // Restore core attributes
+    if (fd.appearance !== undefined) bot.appearance = fd.appearance;
+    if (fd.age !== undefined) bot.age = fd.age;
+    if (fd.gender !== undefined) bot.gender = fd.gender;
+    if (fd.career !== undefined) bot.career = fd.career;
+    if (fd.year !== undefined) bot.year = fd.year;
+    if (fd.country !== undefined) bot.country = fd.country;
+    if (fd.bio !== undefined) bot.bio = fd.bio;
+    if (fd.prompt !== undefined) bot.prompt = fd.prompt;
+    if (fd.relation !== undefined) bot.relation = fd.relation;
+    if (fd.dynBio !== undefined) bot.dynBio = JSON.parse(JSON.stringify(fd.dynBio));
+    if (fd.schedule !== undefined) bot.schedule = fd.schedule ? JSON.parse(JSON.stringify(fd.schedule)) : null;
+    if (fd.personaId !== undefined) bot.personaId = fd.personaId;
+    // Restore body measurements
+    if (fd.height !== undefined) bot.height = fd.height;
+    if (fd.weight !== undefined) bot.weight = fd.weight;
+    if (fd.bust !== undefined) bot.bust = fd.bust;
+    if (fd.waist !== undefined) bot.waist = fd.waist;
+    if (fd.hips !== undefined) bot.hips = fd.hips;
+    // Restore states
+    if (fd.states !== undefined) bot.states = [...fd.states];
+    // Restore cycle/repro data (completely reset to first state)
+    if (fd.cycleData !== undefined) {
+        bot.cycleData = fd.cycleData ? JSON.parse(JSON.stringify(fd.cycleData)) : null;
+    }
+    console.log('[First Data] Restored initial state for', bot.name);
 }
 
 async function rollContext(btn) {
@@ -3422,19 +3678,25 @@ async function rollContext(btn) {
         'a creative or cultural space (gallery, bookstore, concert, festival)',
         'a health or crisis adjacent moment (hospital waiting room, pharmacy, emergency)',
         'a digital-to-physical crossover (met online, game event, fan meetup)',
+        'a chance encounter in transit (bus stop, elevator, waiting room)',
+        'a shared interest scenario (library, gym, hobby shop, class)',
+        'a seasonal or weather-based moment (rain shelter, snow clearing, heat wave)',
+        'a service interaction (café, retail, delivery, repair shop)',
+        'a quiet public space (library, park bench, empty train car)',
+        'a social gathering edge (party outskirts, wedding guest, event staff)',
     ];
     const pick = categories[Math.floor(Math.random() * categories.length)];
 
     try {
         const result = await callLlama(
-            `You are a creative scene writer. Write a short vivid first-meeting scenario (2 sentences max) for a ${gender} character named "${name}". 
+            `You are a creative scene writer. Write a vivid first-meeting scenario (1 sentence only) for a ${gender} character named "${name}".
 Setting category you MUST use: ${pick}.
 ${personality ? `Character personality hint: ${personality.substring(0, 120)}` : ''}
 Rules:
-- Be SPECIFIC: name a real place, time of day, sensory detail
+- Be SPECIFIC: name a real place, time of day, one sensory detail
 - Start IN the moment - no backstory
 - Avoid generic openers like "You meet at a café" or "You bump into"
-- English only. Max 2 sentences.`,
+- English only. Exactly 1 sentence, 15-25 words.`,
             'Write the meeting scenario now.'
         );
         document.getElementById('bot-context').value = result;
@@ -3897,15 +4159,18 @@ function showBioPopup() {
                     .replace(/(\bweek\s*)\d{1,2}(\s*(?:pregnant|of\s*pregnancy))/gi, `$1${currentWeek}$2`);
                 if (patched !== bioText) {
                     bioText = patched;
-                    // Write to the correct bio store based on context
-                    const targetBio = curGroupId ? (bot.grpDynBio || (bot.grpDynBio = {})) : (bot.dynBio || (bot.dynBio = {}));
-                    const fieldSrc = (targetBio.bio || bot.bio || '');
-                    const patchedStored = fieldSrc
-                        .replace(/\b\d{1,2}\s*weeks?\s*pregnant/gi, `${currentWeek} weeks pregnant`)
-                        .replace(/currently\s+\d{1,2}\s*w(?:eeks?)?\s+pregnant/gi, `currently ${currentWeek} weeks pregnant`)
-                        .replace(/(\bweek\s*)\d{1,2}(\s*(?:pregnant|of\s*pregnancy))/gi, `$1${currentWeek}$2`);
-                    targetBio.bio = patchedStored;
-                    saveBots();
+                    // Solo chat bio popup: ONLY write to bot.dynBio, never bot.grpDynBio
+                    // curGroupId should always be null in solo chat context (set by openChat)
+                    if (!curGroupId) {
+                        const targetBio = bot.dynBio || (bot.dynBio = {});
+                        const fieldSrc = (targetBio.bio || bot.bio || '');
+                        const patchedStored = fieldSrc
+                            .replace(/\b\d{1,2}\s*weeks?\s*pregnant/gi, `${currentWeek} weeks pregnant`)
+                            .replace(/currently\s+\d{1,2}\s*w(?:eeks?)?\s+pregnant/gi, `currently ${currentWeek} weeks pregnant`)
+                            .replace(/(\bweek\s*)\d{1,2}(\s*(?:pregnant|of\s*pregnancy))/gi, `$1${currentWeek}$2`);
+                        targetBio.bio = patchedStored;
+                        saveBots();
+                    }
                 }
             }
         }
@@ -3917,7 +4182,15 @@ function showBioPopup() {
         if (ageDynBadge) ageDynBadge.style.display = parseInt(bot.age) ? 'inline' : 'none';
 
         const prel = document.getElementById('p-rel');
-        if (prel) prel.innerText = getDynField(bot, 'relation') || '-';
+        if (prel) {
+            const relations = [];
+            const socialRel = getDynField(bot, 'socialRelation');
+            const familyRel = getDynField(bot, 'familyRelation');
+            // Emotional relation hidden - still in development
+            if (socialRel) relations.push(`Social: ${socialRel}`);
+            relations.push(`Family: ${familyRel || 'none'}`);
+            prel.innerText = relations.join(' | ');
+        }
         const pcareer = document.getElementById('p-career');
         const pcareerBox = document.getElementById('p-career-box');
         if (pcareer && pcareerBox) {
@@ -3925,12 +4198,15 @@ function showBioPopup() {
             else { pcareerBox.style.display = 'none'; }
         }
 
+        // Solo chat bio sync status - ONLY reads from dynBio (solo), never grpDynBio (group)
         const syncStatus = document.getElementById('dynbio-sync-status');
-        if (syncStatus && bot.dynBio && bot.dynBio.lastSyncAt) {
-            const msgsSince = bot.history.length - bot.dynBio.lastSyncAt;
-            syncStatus.textContent = msgsSince > 0 ? `+${msgsSince} msg ago` : 'up to date';
-        } else if (syncStatus) {
-            syncStatus.textContent = 'not synced yet';
+        if (syncStatus) {
+            if (bot.dynBio && bot.dynBio.lastSyncAt) {
+                const msgsSince = bot.history.length - bot.dynBio.lastSyncAt;
+                syncStatus.textContent = msgsSince > 0 ? `solo: +${msgsSince} msg ago` : 'solo: up to date';
+            } else {
+                syncStatus.textContent = 'solo: not synced yet';
+            }
         }
 
         // --- NEW: Populate Personality & Traits ---
